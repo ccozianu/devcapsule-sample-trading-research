@@ -1,0 +1,10 @@
+devcapsule-schema-version = 1
+
+[capabilities]
+need = ["claude-code-agent", "codex-agent", "python", "python-ide"]
+
+[project]
+name = "DevCapsule Sample: Trading Research"
+slug = "devcapsule-sample-trading-research"
+creator = "https://github.com/ccozianu"
+mount = "/workspace/trading-research"
