@@ -21,11 +21,11 @@
 - `engineering-docs/archive/` — concluded multiple-stream workstream state
 - `engineering-docs/session-records/` — explicitly requested session records
 - [Project-management workstream status](engineering-docs/wip/2026-08-21-project-management/CURRENT-STATUS.md)
-- [Repository-foundation workstream status](engineering-docs/wip/2026-08-21-repository-foundation/CURRENT-STATUS.md)
 
 ## Other Existing Documentation
 
 - [engineering-docs/bugs/_template.md](engineering-docs/bugs/_template.md)
+- [Repository-foundation workstream archive](engineering-docs/archive/2026-08-21-repository-foundation/CURRENT-STATUS.md)
 - [Apache-2.0 licensing decision](engineering-docs/decisions/product/2026-08-21-apache-2.0-license.md)
 - [engineering-docs/requirements/R-EVAL-001.md](engineering-docs/requirements/R-EVAL-001.md)
 - [engineering-docs/requirements/R-MERGE-001.md](engineering-docs/requirements/R-MERGE-001.md)
