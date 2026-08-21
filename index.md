@@ -6,7 +6,7 @@
 - [Documentation index](index.md)
 - [Agent instructions](AGENTS.md)
 - [Reusable human/agent workflow](WORKFLOW.md)
-- [Current status and handoff](CURRENT-STATUS.md)
+- [Open-workstream registry](CURRENT-STATUS.md)
 - [Requirements register](REQUIREMENTS.md)
 
 ## Engineering Records
@@ -20,6 +20,7 @@
 - `engineering-docs/wip/` — active multiple-stream workstream state
 - `engineering-docs/archive/` — concluded multiple-stream workstream state
 - `engineering-docs/session-records/` — explicitly requested session records
+- [Project-management workstream status](engineering-docs/wip/2026-08-21-project-management/CURRENT-STATUS.md)
 
 ## Other Existing Documentation
 
