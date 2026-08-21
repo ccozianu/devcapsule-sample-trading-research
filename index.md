@@ -21,6 +21,7 @@
 - `engineering-docs/archive/` — concluded multiple-stream workstream state
 - `engineering-docs/session-records/` — explicitly requested session records
 - [Project-management workstream status](engineering-docs/wip/2026-08-21-project-management/CURRENT-STATUS.md)
+- [Repository-foundation workstream status](engineering-docs/wip/2026-08-21-repository-foundation/CURRENT-STATUS.md)
 
 ## Other Existing Documentation
 
