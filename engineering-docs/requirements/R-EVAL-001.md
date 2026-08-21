@@ -13,7 +13,7 @@ Implementation:
 - `tests/fixtures/labeled/`
 
 Validation:
-- `PYTHONPATH=src python -m unittest discover -s tests`
+- `nox -s tests`
 
 Related:
 - `engineering-docs/sketch-of-a-project/DESIGN.md`

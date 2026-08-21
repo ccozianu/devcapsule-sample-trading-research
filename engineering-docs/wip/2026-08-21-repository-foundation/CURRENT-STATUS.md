@@ -6,7 +6,7 @@ Goal: Recover, validate, and integrate the pre-migration developer-tooling,
 packaging, licensing, and related documentation changes without mixing them
 into project-management coordination.
 
-State: `active; recovering pre-migration state`
+State: `active; ready for direct-main integration`
 
 Branch prefix: `repository-foundation/`
 
@@ -25,6 +25,9 @@ Restore the pre-migration recovery state onto this registered branch, verify
 the Nox validation and Apache-2.0 packaging/documentation changes, then
 integrate the bounded result.
 
+Status: recovery is complete on `repository-foundation/recovery`. The default
+Nox sessions and package-build session pass on the recovered tree.
+
 Done means: the recovered changes are committed on this branch, shared checks
 pass, the workstream is finalized, and remote `main` contains the final tree.
 
@@ -38,6 +41,13 @@ branch immediately after registration. This one-time transfer is recovery of
 existing state, not authorization to mix future workstreams in a dirty
 checkout.
 
+## Validation Evidence
+
+- `.venv/bin/nox`: 8 tests passed; compile and Ruff sessions passed.
+- `.venv/bin/nox -s build`: wheel and source distribution built successfully,
+  and both include the Apache-2.0 license.
+- Generated `.nox/`, `build/`, `dist/`, and `*.egg-info/` state remains ignored.
+
 ## Local Document Index
 
 - [Intake queue instructions](intake/README.md)
@@ -45,5 +55,5 @@ checkout.
 
 ## Next Resumable Task
 
-Restore the recovery state, inspect and validate it, then checkpoint the
-result before beginning direct-main finalization.
+Commit the validated recovery checkpoint, finalize this bounded workstream,
+rerun required checks on the final tree, then fast-forward and publish `main`.

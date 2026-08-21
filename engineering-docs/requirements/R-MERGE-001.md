@@ -13,7 +13,7 @@ Implementation:
 - `tests/test_merge.py`
 
 Validation:
-- `PYTHONPATH=src python -m unittest discover -s tests`
+- `nox -s tests`
 
 Related:
 - Design decisions D1, D3, and D4 in `engineering-docs/sketch-of-a-project/DESIGN.md`

@@ -26,6 +26,7 @@
 ## Other Existing Documentation
 
 - [engineering-docs/bugs/_template.md](engineering-docs/bugs/_template.md)
+- [Apache-2.0 licensing decision](engineering-docs/decisions/product/2026-08-21-apache-2.0-license.md)
 - [engineering-docs/requirements/R-EVAL-001.md](engineering-docs/requirements/R-EVAL-001.md)
 - [engineering-docs/requirements/R-MERGE-001.md](engineering-docs/requirements/R-MERGE-001.md)
 - [engineering-docs/sketch-of-a-project/DESIGN.md](engineering-docs/sketch-of-a-project/DESIGN.md)
