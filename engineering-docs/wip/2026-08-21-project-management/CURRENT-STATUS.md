@@ -24,11 +24,13 @@ and merge `main` into branches that may be shared.
 
 ## Current Task
 
-Initialize multiple-stream mode and preserve the former single-stream handoff
-as durable portfolio context.
+Complete multiple-stream initialization, preserve the former single-stream
+handoff as durable portfolio context, and route the pre-migration recovery
+state.
 
-Status: completed by the initialization checkpoint that creates this
-workstream. Publication remains pending until GitHub authentication succeeds.
+Status: completed and published. Remote `main` contains the initialized
+multiple-stream structure and the finalized repository-foundation recovery
+through `54e70c9`.
 
 ## Carried-Forward Project State
 
@@ -43,12 +45,10 @@ At the last committed single-stream baseline:
 - The next product slice was the first small, human-reviewed labeled fixture
   set with provenance, gold atomic claims, and an explicit grading rule.
 
-The migration checkout also contained pre-existing, uncommitted tooling,
-licensing, documentation, and handoff changes. Those files remain uncommitted
-and are recovery state, not part of the workflow initialization commit. In
-particular, the working tree records Nox-based validation and an Apache-2.0
-licensing decision that must be routed and checkpointed before ordinary
-workstream development resumes.
+The migration checkout also contained pre-existing tooling, licensing, and
+documentation changes. They were routed through the bounded
+`repository-foundation` workstream, validated, integrated, and archived at
+`engineering-docs/archive/2026-08-21-repository-foundation/`.
 
 ## Coordination Decisions
 
@@ -68,12 +68,13 @@ workstream development resumes.
   instruction to switch modes before doing anything else. The initialization
   was therefore isolated in its own commit without discarding or staging those
   changes.
+- The recovered state was assigned to `repository-foundation`, transferred to
+  its registered branch, validated, integrated through `direct-main`, and
+  concluded on 2026-08-21.
 
 ## Prioritized Next Work
 
-1. Route and checkpoint the pre-migration dirty-tree recovery state without
-   mixing it into this coordination workstream's implementation scope.
-2. Open an ordinary workstream for the first human-reviewed labeled fixture
+1. Open an ordinary workstream for the first human-reviewed labeled fixture
    set. Capture R-EVAL-002 when fixture scope is chosen.
    Done means: the harness loads the fixtures and reports at least the
    single-best and flat-majority baselines without live model calls.
@@ -85,20 +86,16 @@ workstream development resumes.
 - Awaiting the human: fixture subject scope, source selection and provenance,
   and the grading rule; these choices shape R-EVAL-002 and the fixture
   workstream.
-- Weighed and unresolved: the correct ordinary-workstream routing for the
-  pre-migration tooling and licensing recovery state.
 - Deliberately not preserved: conversational chronology before migration; the
   repository records above retain the state needed to resume.
 
 ## External State And Risks
 
-- Local `main` and the cached `origin/main` both pointed to `f058c8c` before
-  initialization.
-- GitHub host verification succeeds, but the 2026-08-21 publication check
-  failed because `~/.ssh/devcapsule_githubkey` was absent in this environment.
-  The project owner reports the GitHub issue solved; recheck immediately before
-  publication rather than assuming the cached remote ref is current.
-- Pre-existing working-tree changes remain outside the initialization commit.
+- GitHub SSH authentication, fetch, and push succeeded on 2026-08-21.
+- Local and remote `main` were verified identical at `54e70c9` after migration
+  and repository-foundation publication.
+- The migrated repository foundation passes the default Nox sessions and the
+  package-build session; see its archived status for evidence.
 
 ## Local Document Index
 
@@ -107,7 +104,6 @@ workstream development resumes.
 
 ## Next Resumable Task
 
-From a clean checkout on `project-management/coordination`, determine and
-record the workstream routing for the pre-migration recovery state, then open
-the ordinary fixture workstream when the project owner is ready to settle its
-scope.
+When the project owner is ready to settle fixture subject scope, source and
+provenance, and the grading rule, record those decisions and open the ordinary
+labeled-fixture workstream from current `main`.
