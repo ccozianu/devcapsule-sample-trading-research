@@ -1,27 +1,35 @@
 # Agent Instructions
 
-Before starting work in this repository, read the project brief at:
+Before starting work, read `README.md`, then read the top-level
+`workflow-type` field in `.devcapsule/devcapsule.toml`. Supported values are
+`single-stream` and `multiple-streams`; a missing field means `single-stream`.
+Treat any other value as invalid.
 
-```text
-README.md
-```
+Read `WORKFLOW.md` for the reusable protocol and `CURRENT-STATUS.md` for this
+project's live state. In single-stream mode, `CURRENT-STATUS.md` is the active
+handoff. In multiple-streams mode, it is the mainline registry: select the one
+workstream associated with the user's request and current branch, then read its
+`engineering-docs/wip/YYYY-MM-DD-MNEMONIC/CURRENT-STATUS.md` and `intake/`.
+Do not mix two workstreams' unfinished state in one checkout.
 
-Pay special attention to the final current-state and next-step section. Then
-read any target-specific or handoff documents referenced there.
+After reading, tell the user that you understand the project and state the
+recorded next step before proceeding. Explicit user direction may reprioritize
+that step without erasing it.
 
-After reading the required documents, acknowledge that you understand the
-project purpose, requirements register, current state, and planned next step
-before proceeding.
+Treat `REQUIREMENTS.md` as the requirements overview and index. Read only the
+detailed requirement, decision, bug, or specification records needed for the
+selected task.
 
-Treat `REQUIREMENTS.md` as the requirement overview and index. Read detailed
-records under `engineering-docs/requirements/` only as needed for the task.
+Keep important requirements, decisions, evidence, open questions, current
+state, and next steps in repository files rather than only in chat. Update the
+selected handoff at meaningful checkpoints and before pausing. In
+multiple-streams mode, follow `WORKFLOW.md` for branch routing, synchronization,
+intake disposition, outbox publication, and integration.
 
-If the brief defines a planned next step, state that next step to the user
-before proceeding.
+The workflow is intentionally incomplete. Where it is silent, use judgment,
+record the gap and the action taken in the selected handoff, and continue
+unless another instruction requires stopping or asking for authority.
 
-If the brief does not define a planned next step, ask the user to choose the
-next step to work on.
-
-When completing a stage, retiring a task, changing project state materially, or
-ending a session, update the final section of `README.md` so the next
-agent/model pair can resume from the current state.
+Maintain `index.md` when permanent Markdown files are added, removed, renamed,
+or moved. Preserve existing project-specific instructions when extending this
+file; refresh the reusable definition only when the developer explicitly asks.
