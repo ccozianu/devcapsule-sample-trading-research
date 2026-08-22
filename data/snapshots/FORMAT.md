@@ -15,8 +15,9 @@ and daily price changes — are real as of the snapshot date (for this file:
 2026-08-22, late morning US Eastern time). Derived columns are recomputed for
 internal consistency after any alteration.
 
-**Raw brokerage exports must never be committed.** Drop them under
-`tests/resources/`, which is gitignored for this reason.
+**Raw brokerage exports must never be committed.** Sanitize a copy into this
+directory, then delete the raw file — do not leave raw exports in the working
+tree (there is no gitignore guard for them).
 
 ## File format
 

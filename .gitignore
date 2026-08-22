@@ -16,7 +16,3 @@ build/
 dist/
 *.egg-info/
 .idea/
-
-# Raw brokerage exports are dropped here and must never be committed;
-# committed demo snapshots live in data/snapshots/ (see data/snapshots/FORMAT.md)
-tests/resources/

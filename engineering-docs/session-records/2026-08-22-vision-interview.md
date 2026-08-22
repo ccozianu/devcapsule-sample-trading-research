@@ -66,6 +66,20 @@ debasement trade in mid-2026; the passage of time adjudicated).
   INFORMATION_MODEL.md §4.8: the synthesizer role for a topic must never be
   held by that topic's conflicted engine, so role rotation is pruned per
   topic. (Carried from the information model; treated as accepted.)
+- **S8 — Acceptance criterion is reflexive, not financial (added
+  2026-08-22, later the same session).** Portfolio returns are explicitly
+  rejected as the success metric — the owner made ~+50% on a similar
+  portfolio the prior year and named that number as a joke, precisely
+  because return outcomes are luck-confounded. The demo is accepted when
+  (a) the human user is happy, and (b) the engines, debating over the
+  **repo's own usage records** (decisions log, evals-ledger resolutions,
+  disputes and their observable resolutions, debate transcripts), converge
+  on the claim that this setup is an acceptable way to help real users gain
+  knowledge about the positions they hold. Guard, noted at acceptance time:
+  that reflexive debate is exposed to sycophancy (engines judging a system
+  whose transcripts they produced), so its evidence must be scoreable
+  records — resolved predictions, criteria that fired before outcomes,
+  capitulations caught — never impressions of the transcripts' quality.
 
 ## Open questions (deliberately deferred)
 
@@ -79,8 +93,8 @@ debasement trade in mid-2026; the passage of time adjudicated).
   not yet fixed; S5 assigns responsibility (orchestration) but not mechanism.
 - **OQ-3 — CSV shuffle specification.** *Resolved later the same session:*
   the sanitized demo snapshot lives at `data/snapshots/portfolio-2026-08-22.csv`
-  with format documentation in `data/snapshots/FORMAT.md`; raw exports stay
-  untracked under `tests/resources/` (gitignored).
+  with format documentation in `data/snapshots/FORMAT.md`; the raw export
+  was deleted after sanitizing (policy: raw exports are never committed).
 - **OQ-4 — Engine lineup and access route** (which three models; OpenRouter
   vs. direct).
 - **OQ-5 — Prior-art webapp history.** The originating manual sessions live

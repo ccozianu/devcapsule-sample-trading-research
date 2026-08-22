@@ -29,8 +29,9 @@ Completed in this workstream:
   (`engineering-docs/design-notes/open-q-convergence-declaration.md`).
 - OQ-3 resolved: sanitized demo portfolio snapshot committed at
   `data/snapshots/portfolio-2026-08-22.csv` with format documentation in
-  `data/snapshots/FORMAT.md`. Raw brokerage exports live untracked under
-  `tests/resources/` (now gitignored).
+  `data/snapshots/FORMAT.md`. The raw export was deleted by the owner after
+  sanitizing; policy (raw exports are never committed, sanitize-then-delete)
+  lives in `data/snapshots/FORMAT.md`.
 
 ## Open Threads
 
@@ -42,10 +43,14 @@ Completed in this workstream:
   environment by the owner; code stays provider-flexible.
 - OQ-5 export of prior claude.ai webapp debate transcripts into `debates/`
   and backfill of already-made engine predictions into the evals ledger.
-- Interview questions pending owner answers: the concrete end-to-end
-  acceptance scenario for the demo ("the pudding"), and the trigger taxonomy
-  for convening debates (calendar events, snapshot thresholds, explicit
-  command; news deliberately excluded for now unless the owner pushes back).
+- The acceptance question is answered: see S8 in the session record
+  (reflexive acceptance — user happiness plus an engine-converged verdict
+  grounded in the repo's own scoreable usage records; returns rejected as a
+  metric). Still pending from the owner: the trigger taxonomy for convening
+  debates (calendar events, snapshot thresholds, explicit command; news
+  deliberately excluded for now unless the owner pushes back), and what
+  minimum body of usage records must exist before the S8 acceptance debate
+  is worth convening.
 
 ## Relationship To Prior Work
 
