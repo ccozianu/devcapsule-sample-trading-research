@@ -21,6 +21,7 @@
 - `engineering-docs/archive/` — concluded multiple-stream workstream state
 - `engineering-docs/session-records/` — explicitly requested session records
 - [Project-management workstream status](engineering-docs/wip/2026-08-21-project-management/CURRENT-STATUS.md)
+- [Vision-consolidation workstream status](engineering-docs/wip/2026-08-22-vision-consolidation/CURRENT-STATUS.md)
 
 ## Other Existing Documentation
 
@@ -30,4 +31,8 @@
 - [engineering-docs/requirements/R-EVAL-001.md](engineering-docs/requirements/R-EVAL-001.md)
 - [engineering-docs/requirements/R-MERGE-001.md](engineering-docs/requirements/R-MERGE-001.md)
 - [engineering-docs/sketch-of-a-project/DESIGN.md](engineering-docs/sketch-of-a-project/DESIGN.md)
+- [engineering-docs/sketch-of-a-project/INFORMATION_MODEL.md](engineering-docs/sketch-of-a-project/INFORMATION_MODEL.md)
+- [2026-08-22 vision-interview session record](engineering-docs/session-records/2026-08-22-vision-interview.md)
+- [Open question: who declares convergence](engineering-docs/design-notes/open-q-convergence-declaration.md)
+- [Portfolio snapshot format](data/snapshots/FORMAT.md)
 - [tests/fixtures/labeled/README.md](tests/fixtures/labeled/README.md)

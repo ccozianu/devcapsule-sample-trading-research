@@ -10,3 +10,4 @@ workstream handoff.
 | Workstream | State | Branch prefix | Handoff |
 |---|---|---|---|
 | `project-management` | active; permanent coordination | `project-management/` | [status](engineering-docs/wip/2026-08-21-project-management/CURRENT-STATUS.md) |
+| `vision-consolidation` | active | `vision-consolidation/` | [status](engineering-docs/wip/2026-08-22-vision-consolidation/CURRENT-STATUS.md) |
