@@ -61,10 +61,11 @@ regardless of OQ-1's outcome.
 
 ## Next Resumable Task
 
-The interview has converged on decisions S1–S9; remaining open questions are
-either deliberately deferred (OQ-1, orchestration mechanics) or non-blocking
-(access route, transcript export). Next: rewrite the project-front documents
-(README, REQUIREMENTS, entry points) around S1–S9 so a fresh comparable LLM
-cannot miss what the project is, and capture new requirement records for
-both halves (debate protocol package; portfolio application per
-`engineering-docs/sketch-of-a-project/INFORMATION_MODEL.md`).
+The interview converged on decisions S1–S9 and the front docs are rewritten
+around them: README now states the project unmissably (the two halves, the
+loop, reflexive acceptance, files-as-UI), and the register carries
+R-PROTO-001, R-PORT-001, R-REFRESH-001, and R-ACCEPT-001 with detailed
+records. Next, pending owner review of the front docs: bootstrap the
+information-model skeleton (directories and file templates per
+INFORMATION_MODEL §2, seeded from `data/snapshots/portfolio-2026-08-22.csv`),
+which is documentation-and-scaffolding, not the paused implementation.

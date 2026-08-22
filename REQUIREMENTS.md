@@ -90,3 +90,58 @@ Status: repo-validated
 
 Implementation and validation:
 - `engineering-docs/requirements/R-MERGE-001.md`
+
+Note: whether this deterministic merge remains the *final* adjudicator, or
+becomes the baseline a synthesizer meta-chat is measured against, is
+deliberately deferred (OQ-1,
+`engineering-docs/design-notes/open-q-convergence-declaration.md`). The
+module stays either way.
+
+### R-PROTO-001: Rotated-Debate Protocol as a Standalone Package
+
+Statement: Deliver the rotated ANSWERER/CRITIC/SYNTHESIZER debate protocol
+as a domain-agnostic Python package, with per-topic role constraints for
+conflicted engines and honestly reported epistemic states.
+
+Priority: MVP
+Status: accepted
+
+Implementation and validation:
+- `engineering-docs/requirements/R-PROTO-001.md`
+
+### R-PORT-001: Portfolio Knowledge Repository
+
+Statement: Instantiate the INFORMATION_MODEL substrate in this repository as
+the living, auditable knowledge base for the sanitized demo portfolio, driven
+from an IDE via Markdown files and terminal commands.
+
+Priority: MVP
+Status: accepted
+
+Implementation and validation:
+- `engineering-docs/requirements/R-PORT-001.md`
+
+### R-REFRESH-001: Daily Knowledge-Refresh Debate
+
+Statement: At least daily, all three engines — with browsing enabled — debate
+whether and how portfolio knowledge must be updated on intervening news;
+concrete mechanics deliberately deferred.
+
+Priority: MVP
+Status: accepted
+
+Implementation and validation:
+- `engineering-docs/requirements/R-REFRESH-001.md`
+
+### R-ACCEPT-001: Reflexive Acceptance Criterion
+
+Statement: The demo is accepted by user happiness plus an engine-converged
+verdict grounded in this repo's own scoreable usage records — never by
+returns — and only after two months of live usage crossing one earnings
+season.
+
+Priority: MVP
+Status: accepted
+
+Implementation and validation:
+- `engineering-docs/requirements/R-ACCEPT-001.md`
