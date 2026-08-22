@@ -61,11 +61,19 @@ regardless of OQ-1's outcome.
 
 ## Next Resumable Task
 
-The interview converged on decisions S1–S9 and the front docs are rewritten
-around them: README now states the project unmissably (the two halves, the
-loop, reflexive acceptance, files-as-UI), and the register carries
-R-PROTO-001, R-PORT-001, R-REFRESH-001, and R-ACCEPT-001 with detailed
-records. Next, pending owner review of the front docs: bootstrap the
-information-model skeleton (directories and file templates per
-INFORMATION_MODEL §2, seeded from `data/snapshots/portfolio-2026-08-22.csv`),
-which is documentation-and-scaffolding, not the paused implementation.
+Front docs are owner-approved. The portfolio knowledge skeleton is cut under
+`portfolio/` (deviation from INFORMATION_MODEL §2 — nested, not repo-root —
+recorded in `portfolio/README.md`): 17 position files generated from the
+committed snapshot, TH-001 quantum-race thesis and factor seeded from the
+owner's stated basket rationale (draft; falsifiers TODO), ROUTING.md,
+DISPUTES.md, calendar/evals stubs with verified-dates-only and OQ-5 backlog
+notes, and a CONTEXT.md placeholder awaiting its generator.
+
+Next: settle the UX outline. A concrete proposal for both invocation shapes
+(generic `rotated_debate ask`, stateful `portfolio` subcommands including
+the S9 `sweep` and the gated S8 `accept`) is drafted in
+`engineering-docs/design-notes/ux-outline.md` with four open questions for
+the owner (digest vs. transcript, naming, sweep cadence ownership, alert
+semantics). When the owner reacts, promote the settled shape into a
+specification and requirement records; only then does implementation of the
+first tool (context generator or generic debate CLI) unpause.

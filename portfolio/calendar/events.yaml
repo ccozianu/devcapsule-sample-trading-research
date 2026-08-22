@@ -1,0 +1,13 @@
+# Dated external events wired to the criteria they can fire.
+# Schema (INFORMATION_MODEL 4.4):
+#   - id: earnings:TICKER:YYYYQn | listing:... | product:... | market-structure:...
+#     date: YYYY-MM-DD          # VERIFIED dates only — never enter a guessed date
+#     type: earnings | product | market-structure | macro
+#     fires: [POS-xxx.KC-n, TH-xxx.Cn, decision:slug]
+#     notes: optional
+#
+# Backlog (dates must be verified before entry, not recalled from memory):
+#   - next earnings for every optioned underlying (NEM, MU, QCOM, PFE, NVDA,
+#     FSLR, GOOG, SIL/PPLT holdings' metals calendar, SBUX, NVO)
+#   - month-18 optionality-decision dates once entry dates are recovered
+[]

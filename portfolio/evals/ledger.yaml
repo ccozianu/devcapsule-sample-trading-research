@@ -1,0 +1,14 @@
+# Prediction ledger. Every scoreable engine claim lands here at registration.
+# Schema (INFORMATION_MODEL 4.6):
+#   - id: EV-YYYY-MM-DD-x
+#     engine: claude | gemini | chatgpt | human
+#     claim: "..."
+#     origin: original | adopted-from:<engine>   # adopted claims never count
+#     tier_at_registration: T1 | T2 | T3         #   as independent confirmation
+#     resolves: YYYY-MM-DD
+#     resolution: null | what actually happened
+#     score: null | correct | incorrect | ambiguous
+#
+# Backlog (OQ-5): import this month's already-made engine predictions from
+# the pre-repo claude.ai sessions before they are forgotten.
+[]

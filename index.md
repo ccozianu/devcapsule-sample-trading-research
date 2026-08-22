@@ -9,6 +9,14 @@
 - [Open-workstream registry](CURRENT-STATUS.md)
 - [Requirements register](REQUIREMENTS.md)
 
+## Portfolio Knowledge Repository
+
+- [Portfolio knowledge tree](portfolio/README.md) — positions, theses,
+  factors, calendar, decisions, debates, evals, observations
+- [Conflict-of-interest routing](portfolio/ROUTING.md)
+- [Open disputes](portfolio/DISPUTES.md)
+- [Portfolio snapshot format](data/snapshots/FORMAT.md)
+
 ## Engineering Records
 
 - `engineering-docs/requirements/` — accepted detailed requirements
@@ -38,5 +46,5 @@
 - [engineering-docs/sketch-of-a-project/INFORMATION_MODEL.md](engineering-docs/sketch-of-a-project/INFORMATION_MODEL.md)
 - [2026-08-22 vision-interview session record](engineering-docs/session-records/2026-08-22-vision-interview.md)
 - [Open question: who declares convergence](engineering-docs/design-notes/open-q-convergence-declaration.md)
-- [Portfolio snapshot format](data/snapshots/FORMAT.md)
+- [UX outline draft: how debates are invoked](engineering-docs/design-notes/ux-outline.md)
 - [tests/fixtures/labeled/README.md](tests/fixtures/labeled/README.md)
