@@ -37,20 +37,19 @@ Completed in this workstream:
 
 - OQ-1 convergence declaration — deferred until real debate transcripts
   exist (see design note).
-- OQ-2 freshness mechanics inside a debate (packet-only vs. engine
-  retrieval) — must be settled before debate-engine contracts are written.
-- OQ-4 engine lineup and access route; API keys to be injected into the
-  environment by the owner; code stays provider-flexible.
+- OQ-2 narrowed by S9: engines browse in the daily refresh debates; still
+  open whether decision-focused debates browse or argue packet-only.
+- OQ-4 narrowed: lineup is Claude/Gemini/ChatGPT; access route open, must
+  support per-vendor browsing tools (S9). API keys to be injected by the
+  owner; code stays provider-flexible.
 - OQ-5 export of prior claude.ai webapp debate transcripts into `debates/`
   and backfill of already-made engine predictions into the evals ledger.
-- The acceptance question is answered: see S8 in the session record
-  (reflexive acceptance — user happiness plus an engine-converged verdict
-  grounded in the repo's own scoreable usage records; returns rejected as a
-  metric). Still pending from the owner: the trigger taxonomy for convening
-  debates (calendar events, snapshot thresholds, explicit command; news
-  deliberately excluded for now unless the owner pushes back), and what
-  minimum body of usage records must exist before the S8 acceptance debate
-  is worth convening.
+- Acceptance settled (S8, with owner refinements): reflexive acceptance —
+  user happiness plus an engine-converged verdict grounded in the repo's
+  own scoreable usage records; returns rejected as a metric; eligible only
+  after ≥2 months of live usage crossing ≥1 earnings season. Triggers
+  settled at high level (S9): daily knowledge-refresh debate with browsing;
+  concrete orchestration mechanics deliberately deferred.
 
 ## Relationship To Prior Work
 
@@ -62,7 +61,10 @@ regardless of OQ-1's outcome.
 
 ## Next Resumable Task
 
-Resume the interview at the pending questions above; when closed, rewrite
-README/REQUIREMENTS and capture new requirement records for both halves
-(debate protocol package; portfolio application per
+The interview has converged on decisions S1–S9; remaining open questions are
+either deliberately deferred (OQ-1, orchestration mechanics) or non-blocking
+(access route, transcript export). Next: rewrite the project-front documents
+(README, REQUIREMENTS, entry points) around S1–S9 so a fresh comparable LLM
+cannot miss what the project is, and capture new requirement records for
+both halves (debate protocol package; portfolio application per
 `engineering-docs/sketch-of-a-project/INFORMATION_MODEL.md`).

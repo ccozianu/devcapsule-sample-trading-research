@@ -80,6 +80,23 @@ debasement trade in mid-2026; the passage of time adjudicated).
   whose transcripts they produced), so its evidence must be scoreable
   records — resolved predictions, criteria that fired before outcomes,
   capitulations caught — never impressions of the transcripts' quality.
+  Owner refinement (same session): the acceptance debate is human-triggered —
+  an owner who is losing money simply never convenes it — so the debate's
+  real job is to catch **false satisfaction**: to veto a happy human whose
+  records don't support the claim. Eligibility window, for the record: the
+  acceptance debate may not be convened before **at least two months of live
+  usage crossing at least one earnings season**, during which the shared
+  knowledge on positions is updated against the market's evolution.
+- **S9 — Daily knowledge-refresh debate (high level settled 2026-08-22;
+  mechanics deliberately deferred).** At least once a day, the three major
+  engines debate whether and how the portfolio knowledge — theses,
+  confirmations, infirmations, future events to watch — needs updating in
+  light of intervening news. All three engines participate **with
+  browsing/research tools enabled**. Likely two-stage shape, to be
+  validated in practice: first a browsing-enabled debate on *which news are
+  relevant*, then a debate on *what the news mean* — including whether the
+  user should be alerted to exit positions. Concrete orchestration details
+  are explicitly premature; do not specify them yet.
 
 ## Open questions (deliberately deferred)
 
@@ -88,15 +105,20 @@ debasement trade in mid-2026; the passage of time adjudicated).
   user's current inclination is a meta-level chat between synthesizers rather
   than the purely deterministic tally of DESIGN.md; deferred until real
   debate transcripts exist.
-- **OQ-2 — Freshness mechanics inside a debate.** Whether debating engines
-  retrieve live data themselves or argue strictly from a curated packet is
-  not yet fixed; S5 assigns responsibility (orchestration) but not mechanism.
+- **OQ-2 — Freshness mechanics inside a debate.** *Substantially resolved by
+  S9:* engines do retrieve (browse) during the daily knowledge-refresh
+  debates. Remaining detail: whether decision-focused debates also browse or
+  argue strictly from the curated repo packet.
 - **OQ-3 — CSV shuffle specification.** *Resolved later the same session:*
   the sanitized demo snapshot lives at `data/snapshots/portfolio-2026-08-22.csv`
   with format documentation in `data/snapshots/FORMAT.md`; the raw export
   was deleted after sanitizing (policy: raw exports are never committed).
-- **OQ-4 — Engine lineup and access route** (which three models; OpenRouter
-  vs. direct).
+- **OQ-4 — Engine lineup and access route.** *Lineup resolved:* the three
+  major engines (Claude, Gemini, ChatGPT), as assumed throughout
+  INFORMATION_MODEL.md. Access route still open — and S9's browsing
+  requirement constrains it: the route must expose each vendor's
+  web-search/browse tooling, which favors direct vendor SDKs (or a router
+  that passes tools through) over a lowest-common-denominator gateway.
 - **OQ-5 — Prior-art webapp history.** The originating manual sessions live
   in a claude.ai project Claude cannot access from this environment
   (https://claude.ai/cowork/project/019f5d6e-a605-74d7-9bbc-5829265422bc).
