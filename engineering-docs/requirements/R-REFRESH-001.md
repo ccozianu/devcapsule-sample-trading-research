@@ -12,11 +12,18 @@ substrate and protocol exist (session record S9). The orchestration layer
 owns freshness triggers generally, and the human can terminate any thread of
 spending (e.g., a liquidated position warrants no further token spend).
 
+Refinement (owner, 2026-08-22, UX round): the tool owns no cadence. The
+sweep's contract is "update knowledge with what is new since the latest
+recorded knowledge update" — watermark-based catch-up, resumable from the
+last covered interval — and the daily rhythm comes from an external trigger
+the owner provisions (or a human on demand). Output is a one-screen digest;
+full transcripts on disk; no alert channel.
+
 Priority: MVP
 Status: accepted
 
 Implementation:
-- Not started.
+- Not started. Contract: `engineering-docs/specifications/debate-invocation.md` §3.
 
 Validation:
 - Deferred until orchestration mechanics are specified.

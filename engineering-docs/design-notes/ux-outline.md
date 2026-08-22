@@ -1,8 +1,9 @@
 # UX Outline — How Debates Are Invoked (DRAFT for discussion)
 
-Status: **proposal, not settled.** Drafted 2026-08-22 by Claude in response
-to the owner's request to outline the user experience for (a) a generic
-rotated debate and (b) a portfolio-applied debate. Awaiting owner reactions.
+Status: **settled at outline level** — owner approved 2026-08-22 with the
+refinements in §4. The binding contract derived from this note lives in
+`engineering-docs/specifications/debate-invocation.md`; this note remains as
+rationale.
 
 The UX doctrine is fixed by S3: the interface is an IDE. Markdown in, Markdown
 out, terminal commands in between. Commands mutate knowledge state; tests
@@ -58,14 +59,21 @@ python -m portfolio accept                 # the S8 acceptance debate; refuses b
 4. **The command ends where the human begins**: its last output line names
    what a decision entry would have to address, but writing one is manual.
 
-`portfolio sweep` (the S9 daily refresh) is the two-stage shape the owner
+`portfolio sweep` (the S9 refresh) is the two-stage shape the owner
 sketched: stage one, a browsing-enabled debate on *which intervening news
 are relevant to the held positions and registered theses*; stage two, only
 if stage one surfaces anything, a debate on *what the news mean* — whether
 theses need confirmation/infirmation updates, whether calendar entries must
-be added, and whether the user should be alerted (up to "consider getting
-out"). Alerts are files plus a loud final line in the terminal; the demo has
-no push channel, by design (S1).
+be added, and whether the digest should advise reconsidering positions.
+
+**Watermark semantics (owner refinement, 2026-08-22).** Sweep is not
+cadence-owned: its contract is *"update knowledge with what is new since the
+latest recorded knowledge update."* Each sweep records the interval it
+covered; the next sweep resumes from that watermark. The daily rhythm comes
+from whoever calls it — the owner's external trigger, or the human by hand —
+and the same catch-up semantics serve any future trigger or use case. A
+sweep after a week away covers the week; two sweeps in an hour make the
+second one near-trivial.
 
 ## 3. A day in the life (the demo narrative)
 
@@ -77,17 +85,15 @@ criterion fired or it didn't; write the decision entry by hand either way;
 scores per engine — the calibration record accumulating toward the S8
 acceptance debate.
 
-## 4. Open UX questions for the owner
+## 4. UX questions — settled by the owner, 2026-08-22
 
-1. **Digest vs. transcript.** Sweep output: full transcripts always, or a
-   one-screen digest with transcripts on disk? (Proposal: digest; transcripts
-   are always written anyway.)
-2. **Naming.** `rotated_debate` and `portfolio` as the two command names —
-   good, or rename before they calcify?
-3. **Sweep cadence ownership.** Cron-like automation of the daily sweep, or
-   is the human running it manually part of the demo's honesty for now?
-   (Proposal: manual first; automation is a later convenience, not a design
-   question.)
-4. **Alert semantics.** Does "tell the user to run for the hills" ever page
-   the user (email etc.), or is reading the sweep output the contract?
-   (Proposal: reading the output is the contract for the demo.)
+1. **Digest vs. transcript: digest.** One-screen digest to the terminal,
+   full transcripts always on disk — "the output of the LLM is what the
+   human user is after."
+2. **Naming: approved.** `rotated_debate` and `portfolio` stand.
+3. **Sweep cadence: external trigger + watermark semantics.** The owner will
+   provision a daily trigger; the tool itself takes no cadence — it catches
+   up from the last recorded knowledge update (see §2). This generalizes to
+   ad-hoc runs ("in case something happens") and future use cases.
+4. **Alerts: none.** Reading the sweep digest is the whole contract. Scope
+   stays contained to the maximum extent possible.

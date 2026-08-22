@@ -69,11 +69,16 @@ owner's stated basket rationale (draft; falsifiers TODO), ROUTING.md,
 DISPUTES.md, calendar/evals stubs with verified-dates-only and OQ-5 backlog
 notes, and a CONTEXT.md placeholder awaiting its generator.
 
-Next: settle the UX outline. A concrete proposal for both invocation shapes
-(generic `rotated_debate ask`, stateful `portfolio` subcommands including
-the S9 `sweep` and the gated S8 `accept`) is drafted in
-`engineering-docs/design-notes/ux-outline.md` with four open questions for
-the owner (digest vs. transcript, naming, sweep cadence ownership, alert
-semantics). When the owner reacts, promote the settled shape into a
-specification and requirement records; only then does implementation of the
-first tool (context generator or generic debate CLI) unpause.
+The UX outline is settled (owner, 2026-08-22): digest-plus-transcripts,
+command names approved, sweep is watermark-based catch-up with cadence owned
+by an external trigger, no alert channel. The binding contract is
+`engineering-docs/specifications/debate-invocation.md` (v0), and
+R-REFRESH-001 carries the watermark refinement.
+
+Next: implementation may unpause, pending the owner's pick of the first
+slice. Recommended order: (1) `portfolio context` — deterministic, no LLM
+calls, immediately useful, forces the packet format; (2) `rotated_debate
+ask` once API keys are injected (OQ-4 access route must be chosen then);
+(3) `portfolio debate`, which composes the two; (4) `sweep`. The vision
+interview itself is closed; this workstream continues as the design/build
+coordination for the two halves.
