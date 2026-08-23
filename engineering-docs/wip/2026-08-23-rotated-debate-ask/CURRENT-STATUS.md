@@ -16,7 +16,10 @@ Integration target: `main` (`direct-main`).
 
 ## Current Task
 
-v0 implemented and repo-validated:
+v0 implemented, repo-validated, and **published to remote `main` at
+`7ea6651`** (2026-08-23). The workstream branch `rotated-debate/ask-v0` was
+fast-forward-integrated per `direct-main`. Session closed here; resume at
+"Next Resumable Task" below. What shipped:
 
 - `src/rotated_debate/`: dependency-free core — `model` (settings, records,
   concession/capitulation distinction, reserved outcome fields), `parsing`
@@ -42,7 +45,12 @@ v0 implemented and repo-validated:
 
 ## Next Resumable Task
 
-When keys are present: `pip install -e .[engines]`, run a real
-`rotated_debate ask` on a harmless question, read the transcript, iterate
-prompts. Then proceed per the settled order: `portfolio context`, then
-`portfolio debate`, then `sweep`.
+Blocked on the owner injecting API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY,
+GOOGLE_API_KEY) into the environment — not yet done as of session close
+2026-08-23. Then: `pip install -e .[engines]`; run
+`python -m rotated_debate ask "<harmless question>"`; verify the v0 default
+model bindings in `engines.DEFAULT_MODELS` against what the keys can
+actually reach; read the transcript and iterate the prompt templates. Then
+proceed per the settled order in new workstreams: `portfolio context`, then
+`portfolio debate`, then `sweep`
+(contract: `engineering-docs/specifications/debate-invocation.md`).

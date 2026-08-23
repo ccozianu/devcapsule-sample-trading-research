@@ -9,7 +9,9 @@ entry points) so a fresh comparable LLM cannot miss what the project is.
 Implementation is intentionally paused until this workstream says the design
 is on solid footing (owner instruction, 2026-08-22).
 
-State: `active`
+State: `deliverables complete; ready to archive` (2026-08-23 — interview
+closed at S1–S9, front docs rewritten, skeleton cut, UX settled and bound as
+the v0 spec; archive per WORKFLOW.md when convenient)
 
 Branch prefix: `vision-consolidation/`
 
@@ -75,10 +77,9 @@ by an external trigger, no alert channel. The binding contract is
 `engineering-docs/specifications/debate-invocation.md` (v0), and
 R-REFRESH-001 carries the watermark refinement.
 
-Next: implementation may unpause, pending the owner's pick of the first
-slice. Recommended order: (1) `portfolio context` — deterministic, no LLM
-calls, immediately useful, forces the packet format; (2) `rotated_debate
-ask` once API keys are injected (OQ-4 access route must be chosen then);
-(3) `portfolio debate`, which composes the two; (4) `sweep`. The vision
-interview itself is closed; this workstream continues as the design/build
-coordination for the two halves.
+Implementation unpaused 2026-08-23: the owner picked `rotated_debate ask`
+first, on LangChain (decision recorded), and that build shipped in the
+`rotated-debate-ask` workstream. The owner-confirmed order for what follows:
+`portfolio context`, then `portfolio debate`, then `sweep` — each to be
+opened as its own ordinary workstream from current `main`. Nothing remains
+in this workstream itself; it is ready to archive.
