@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "rotated-consensus"
 version = "0.1.0"
-description = "Evaluation-first research scaffold for deterministic claim-level LLM consensus"
+description = "Rotated-debate protocol and deterministic claim-level LLM consensus research"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "Apache-2.0"
@@ -16,6 +16,13 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.6"]
+# Provider access for rotated_debate.engines; the core stays dependency-free.
+engines = [
+    "langchain>=0.3",
+    "langchain-anthropic",
+    "langchain-openai",
+    "langchain-google-genai",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

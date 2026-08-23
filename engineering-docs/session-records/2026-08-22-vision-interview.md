@@ -113,12 +113,14 @@ debasement trade in mid-2026; the passage of time adjudicated).
   the sanitized demo snapshot lives at `data/snapshots/portfolio-2026-08-22.csv`
   with format documentation in `data/snapshots/FORMAT.md`; the raw export
   was deleted after sanitizing (policy: raw exports are never committed).
-- **OQ-4 — Engine lineup and access route.** *Lineup resolved:* the three
+- **OQ-4 — Engine lineup and access route.** *Resolved.* Lineup: the three
   major engines (Claude, Gemini, ChatGPT), as assumed throughout
-  INFORMATION_MODEL.md. Access route still open — and S9's browsing
-  requirement constrains it: the route must expose each vendor's
-  web-search/browse tooling, which favors direct vendor SDKs (or a router
-  that passes tools through) over a lowest-common-denominator gateway.
+  INFORMATION_MODEL.md. Access route (owner, 2026-08-23): LangChain
+  chat-model abstractions, for future flexibility across LLMs and API
+  endpoints — see
+  `engineering-docs/decisions/engineering/2026-08-23-langchain-engine-access.md`.
+  Browsing (S9) will ride LangChain's provider-native web-search tool
+  bindings.
 - **OQ-5 — Prior-art webapp history.** The originating manual sessions live
   in a claude.ai project Claude cannot access from this environment
   (https://claude.ai/cowork/project/019f5d6e-a605-74d7-9bbc-5829265422bc).

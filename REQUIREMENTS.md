@@ -104,7 +104,7 @@ as a domain-agnostic Python package, with per-topic role constraints for
 conflicted engines and honestly reported epistemic states.
 
 Priority: MVP
-Status: accepted
+Status: implemented
 
 Implementation and validation:
 - `engineering-docs/requirements/R-PROTO-001.md`

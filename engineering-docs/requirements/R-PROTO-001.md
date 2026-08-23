@@ -12,16 +12,23 @@ synthesizer role for it. The debate outcome is reported honestly as an
 observed epistemic state, never as confidence or correctness.
 
 Priority: MVP
-Status: accepted
+Status: implemented
 
 Implementation:
-- Not yet started; the deterministic primitives in `src/rotated_consensus/`
-  predate this record and remain the comparison baseline.
+- `src/rotated_debate/` (v0, 2026-08-23): dependency-free core (model,
+  parsing, prompts, protocol, transcript) with LangChain isolated in
+  `engines.py` behind the `engines` extra; CLI per
+  `engineering-docs/specifications/debate-invocation.md` §1.
+- The deterministic primitives in `src/rotated_consensus/` predate this
+  record and remain the comparison baseline.
 
 Validation:
-- Deferred: per the pudding principle (session record S2), the protocol is
-  declared successful only after satisfying results on real portfolio
-  positions (see R-ACCEPT-001).
+- Repo-validated: `nox` (unit tests with scripted fake engines, compile,
+  lint) passes without network or keys. Live three-engine run pending
+  injected API keys.
+- Success declaration stays deferred: per the pudding principle (session
+  record S2), only satisfying results on real portfolio positions close
+  this (see R-ACCEPT-001).
 
 Related:
 - `engineering-docs/session-records/2026-08-22-vision-interview.md` (S2, S7)
