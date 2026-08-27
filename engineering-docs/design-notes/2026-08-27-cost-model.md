@@ -21,6 +21,12 @@ blind spots make several figures floors, not totals.
 | no browse, 1 round, Fable (10:26) | $0.64 | $0.15 | $0.16 | **~$0.96** |
 | browse, 1 round (11:10) | $6.17 (19 searches, 471k in) | $0.28+ | $0.98+ | **~$7.4+** |
 | browse, 2 rounds (14:30) | $11.42 (22 searches, 903k in) | $0.39+ | $1.63+ | **~$13.4+** |
+| browse, 2 rounds, + last synthesizer gemini-3.7-flash (18:04) | $8.04 (28 searches, 574k in) | $0.43+ | $1.45+ | **~$9.9+** (flash leg ~$0.01) |
+
+Note the 14:30 vs 18:04 comparison: same configuration apart from the
+last synthesizer, yet the claude leg cost $11.4 vs $8.0 (903k vs 574k
+input tokens) — run-to-run variance in search/context volume is large,
+so single-run costs are indicative, not repeatable.
 
 \* the 10:08 run predates usage capture; claude leg estimated from the
 10:26 token counts at Sonnet 5 prices ($3/$15).
@@ -36,13 +42,14 @@ Reading the shape:
   tokens are invisible (25k reported input for an engine that
   demonstrably browsed). Those legs are floors.
 
-## Predicted console totals for 2026-08-27 (all four runs)
+## Predicted console totals for 2026-08-27 (all FIVE runs)
 
-- **OpenAI:** ~$2.93 in tokens (0.16 + 0.16 + 0.98 + 1.63) **plus**
-  unmetered per-search charges — the delta vs the console is the
-  per-search bill we cannot see.
-- **Google:** ~$0.97 in tokens (0.15 + 0.15 + 0.28 + 0.39) **plus** any
-  grounding charges beyond the free tier — likely ~$0 at this volume.
+- **OpenAI:** ~$4.38 in tokens (0.16 + 0.16 + 0.98 + 1.63 + 1.45)
+  **plus** unmetered per-search charges — the delta vs the console is
+  the per-search bill we cannot see.
+- **Google:** ~$1.41 in tokens (0.15 + 0.15 + 0.28 + 0.39 + 0.43 +
+  ~$0.01 flash) **plus** any grounding charges beyond the free tier —
+  likely ~$0 at this volume.
 
 ## Rough scenario costs (extrapolated)
 
@@ -76,15 +83,15 @@ Reading the shape:
 
 **Task:** check the 2026-08-27 usage/billing dashboards for the OpenAI
 and Google API keys. There was no other usage that day, so the daily
-totals cover exactly the four runs above (note: *four*, including the
-10:08 Sonnet-lineup run — not just the three later scenarios). Record
+totals cover exactly the five runs above (note: *five*, including the
+10:08 Sonnet-lineup run and the 18:04 last-synthesizer run). Record
 actuals here; the delta vs the predictions above quantifies the
 unmetered items (OpenAI per-search billing, Gemini grounding).
 
 | Provider | Predicted (tokens only) | Console actual | Delta / notes |
 |---|---|---|---|
-| OpenAI | ~$2.93 | *(pending)* | |
-| Google | ~$0.97 | *(pending)* | |
+| OpenAI | ~$4.38 | *(pending)* | |
+| Google | ~$1.41 | *(pending)* | |
 
 Agents: if this table still says *(pending)* in a later session, remind
 the owner.

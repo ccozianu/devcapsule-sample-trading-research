@@ -29,3 +29,11 @@ Filenames carry the transcript's own `generated_at` timestamp
   $40B unused ATM), and surfaced net-new facts (capped calls, Berkshire's
   Aug +$17B). Verdict direction unchanged from all prior runs.
   38 reasoned concessions / 0 capitulations, `state=converged`.
+- `20260827-180434-GOOG-browse-2rounds-xtrasynth-debate.md` — same
+  configuration plus `--add-last-synthesizer gemini-3.7-flash`. First
+  live last-synthesis: flash's text-only discipline held (every cited
+  figure traces to the three syntheses; spot-checked), facts/reasoning
+  axes cleanly separated (`factual_disputes: []`, two real reasoning
+  disputes surfaced), verdict converged, flash leg cost ~$0.01 on 6.8k
+  tokens. Total ~$9.9 — cheaper than the 14:30 run despite the extra
+  role (large run-to-run variance in Fable's search volume).

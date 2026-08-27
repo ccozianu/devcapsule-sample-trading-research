@@ -92,7 +92,12 @@ What shipped:
   syntheses by a non-participant model; never browses; reports
   facts-vs-reasoning agreement separately; verdict recorded as a third
   OQ-1 candidate (`outcome_state.last_synthesizer_verdict`), never
-  replacing the state line. Awaiting first live run.
+  replacing the state line. **Live-validated 2026-08-27**
+  (`20260827-180434-GOOG-browse-2rounds-xtrasynth-debate.md`):
+  gemini-3.7-flash's text-only discipline held (all cited figures trace
+  to the syntheses), the facts/reasoning split worked
+  (`factual_disputes: []` with two genuine reasoning disputes), and the
+  judge leg cost ~$0.01.
 - **Deferred design question (owner, 2026-08-27):** should the three
   rotation synthesizers also lose browse access? Rationale for yes:
   evidence introduced at synthesis is unrebutted (nobody criticizes the
