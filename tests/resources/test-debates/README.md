@@ -20,3 +20,12 @@ Filenames carry the transcript's own `generated_at` timestamp
   false vs. the SEC 10-Q's $49.6B; Fable's 17.4x P/E exposed as a $99B
   one-off-gain artifact). Fable made 19 web searches and 471k input
   tokens (~$6 of the ~$7.50 total). `state=converged`, zero parse errors.
+- `20260827-143057-GOOG-browse-2rounds-debate.md` — same question,
+  `--browse --rounds 2` (~$13.5, 1.8x the 1-round browse run). Round 2
+  audits the rebuttals' reasoning rather than rehashing round 1: caught
+  anchoring on an unrevised probability estimate (forced 60-65% down to
+  55-60%), independently re-verified figures against EDGAR, reconciled
+  the $85B/$49.6B dispute (a $90B upsized program: $49.6B completed +
+  $40B unused ATM), and surfaced net-new facts (capped calls, Berkshire's
+  Aug +$17B). Verdict direction unchanged from all prior runs.
+  38 reasoned concessions / 0 capitulations, `state=converged`.
