@@ -16,7 +16,7 @@ from rotated_debate.protocol import ChatFn
 DEFAULT_MODELS = {
     "claude": "anthropic:claude-sonnet-5",
     "chatgpt": "openai:gpt-5",
-    "gemini": "google_genai:gemini-2.5-pro",
+    "gemini": "google_genai:gemini-3.1-pro-preview",
 }
 ENV_PREFIX = "ROTATED_DEBATE_MODEL_"  # e.g. ROTATED_DEBATE_MODEL_CLAUDE
 
