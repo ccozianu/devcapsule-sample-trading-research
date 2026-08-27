@@ -9,12 +9,13 @@ by `langchain.chat_models.init_chat_model`.
 from __future__ import annotations
 
 import os
+from collections.abc import Callable, Mapping
 
 from rotated_debate.model import EngineSpec
 from rotated_debate.protocol import ChatFn
 
 DEFAULT_MODELS = {
-    "claude": "anthropic:claude-sonnet-5",
+    "claude": "anthropic:claude-fable-5",
     "chatgpt": "openai:gpt-5.6-sol",
     "gemini": "google_genai:gemini-3.1-pro-preview",
 }
@@ -48,6 +49,28 @@ def resolve_model_id(spec: EngineSpec) -> str:
     )
 
 
+# Per-engine consumption totals. Units are whatever the provider reports —
+# tokens for all current bindings, but nothing here assumes tokens: every
+# top-level integer field of the provider's usage report is summed as-is.
+UsageSink = dict[str, dict[str, int]]
+
+
+def record_usage(sink: UsageSink, alias: str, usage: Mapping[str, object] | None) -> None:
+    """Fold one call's usage report into the per-engine sink.
+
+    Always counts the call; sums top-level integer fields (LangChain's
+    usage_metadata: input_tokens, output_tokens, total_tokens); skips
+    nested detail dicts and non-numeric fields.
+    """
+    entry = sink.setdefault(alias, {"calls": 0})
+    entry["calls"] += 1
+    if not usage:
+        return
+    for key, value in usage.items():
+        if isinstance(value, int) and not isinstance(value, bool):
+            entry[key] = entry.get(key, 0) + value
+
+
 def _normalize_content(content: object) -> str:
     """LangChain content may be a string or a list of content blocks."""
     if isinstance(content, str):
@@ -63,7 +86,11 @@ def _normalize_content(content: object) -> str:
     return str(content)
 
 
-def build_chat_fn(model_id: str, temperature: float | None) -> ChatFn:
+def build_chat_fn(
+    model_id: str,
+    temperature: float | None,
+    report_usage: Callable[[Mapping[str, object] | None], None] | None = None,
+) -> ChatFn:
     try:
         from langchain.chat_models import init_chat_model
     except ImportError as exc:  # pragma: no cover - environment-dependent
@@ -77,14 +104,27 @@ def build_chat_fn(model_id: str, temperature: float | None) -> ChatFn:
     model = init_chat_model(model_id, **extra)
 
     def chat(messages: list[tuple[str, str]]) -> str:
-        return _normalize_content(model.invoke(messages).content)
+        response = model.invoke(messages)
+        if report_usage is not None:
+            report_usage(getattr(response, "usage_metadata", None))
+        return _normalize_content(response.content)
 
     return chat
 
 
 def build_engines(
-    specs: list[EngineSpec], temperature: float | None
+    specs: list[EngineSpec],
+    temperature: float | None,
+    usage_sink: UsageSink | None = None,
 ) -> dict[str, ChatFn]:
+    def reporter(alias: str) -> Callable[[Mapping[str, object] | None], None] | None:
+        if usage_sink is None:
+            return None
+        return lambda usage: record_usage(usage_sink, alias, usage)
+
     return {
-        spec.alias: build_chat_fn(resolve_model_id(spec), temperature) for spec in specs
+        spec.alias: build_chat_fn(
+            resolve_model_id(spec), temperature, reporter(spec.alias)
+        )
+        for spec in specs
     }

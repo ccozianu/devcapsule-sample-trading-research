@@ -15,7 +15,12 @@ def _fm(key: str, value: object, indent: int = 0) -> str:
     return f"{' ' * indent}{key}: {json.dumps(value)}"
 
 
-def render(result: DebateResult, generated_at: str, engine_models: dict[str, str]) -> str:
+def render(
+    result: DebateResult,
+    generated_at: str,
+    engine_models: dict[str, str],
+    usage: dict[str, dict[str, int]] | None = None,
+) -> str:
     reasoned = sum(1 for c in result.concessions if not c.capitulation)
     capitulations = sum(1 for c in result.concessions if c.capitulation)
     parse_errors = [
@@ -34,6 +39,9 @@ def render(result: DebateResult, generated_at: str, engine_models: dict[str, str
     lines.append(_fm("question", result.question))
     lines.append(_fm("generated_at", generated_at))
     lines.append(_fm("engines", engine_models))
+    # Provider-reported consumption per engine; units are whatever the
+    # provider uses (tokens today), summed by engines.record_usage.
+    lines.append(_fm("usage", usage))
     lines.append(_fm("rotations", result.settings.rotations))
     lines.append(_fm("rounds", result.settings.rounds))
     lines.append(_fm("browse", result.settings.browse))

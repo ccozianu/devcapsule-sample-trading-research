@@ -68,7 +68,8 @@ def main(argv: list[str] | None = None) -> int:
         temperature=args.temperature,
     )
     specs = engine_mod.parse_engine_args(args.engines)
-    chat_engines = engine_mod.build_engines(specs, args.temperature)
+    usage_sink: engine_mod.UsageSink = {}
+    chat_engines = engine_mod.build_engines(specs, args.temperature, usage_sink)
     context = _read_context(args.context)
 
     def report(message: str) -> None:
@@ -82,7 +83,9 @@ def main(argv: list[str] | None = None) -> int:
     out = Path(args.out) if args.out else Path(f"debate-{now:%Y%m%d-%H%M%S}.md")
     engine_models = {spec.alias: engine_mod.resolve_model_id(spec) for spec in specs}
     out.write_text(
-        transcript.render(result, now.isoformat(timespec="seconds"), engine_models),
+        transcript.render(
+            result, now.isoformat(timespec="seconds"), engine_models, usage_sink
+        ),
         encoding="utf-8",
     )
     print(f"state={result.provisional_state} transcript={out}")

@@ -7,7 +7,12 @@ from contextlib import redirect_stderr
 from test_debate_protocol import make_engines
 
 from rotated_debate.cli import build_parser, main
-from rotated_debate.engines import EngineSpec, parse_engine_args, resolve_model_id
+from rotated_debate.engines import (
+    EngineSpec,
+    parse_engine_args,
+    record_usage,
+    resolve_model_id,
+)
 from rotated_debate.model import DebateSettings
 from rotated_debate.protocol import run_debate
 from rotated_debate.transcript import render
@@ -31,6 +36,30 @@ class EngineSpecTests(unittest.TestCase):
     def test_explicit_binding_wins_over_defaults(self) -> None:
         spec = EngineSpec(alias="claude", provider_model="anthropic:claude-opus-5")
         self.assertEqual(resolve_model_id(spec), "anthropic:claude-opus-5")
+
+    def test_default_claude_binding_is_fable_5(self) -> None:
+        self.assertEqual(
+            resolve_model_id(EngineSpec(alias="claude")), "anthropic:claude-fable-5"
+        )
+
+
+class UsageTests(unittest.TestCase):
+    def test_integer_fields_accumulate_and_calls_are_counted(self) -> None:
+        sink: dict[str, dict[str, int]] = {}
+        record_usage(sink, "claude", {"input_tokens": 10, "output_tokens": 5})
+        record_usage(
+            sink,
+            "claude",
+            {"input_tokens": 7, "output_tokens": 3, "input_token_details": {"cache": 2}},
+        )
+        self.assertEqual(
+            sink["claude"], {"calls": 2, "input_tokens": 17, "output_tokens": 8}
+        )
+
+    def test_missing_usage_still_counts_the_call(self) -> None:
+        sink: dict[str, dict[str, int]] = {}
+        record_usage(sink, "gemini", None)
+        self.assertEqual(sink["gemini"], {"calls": 1})
 
 
 class CliTests(unittest.TestCase):
@@ -66,6 +95,16 @@ class TranscriptTests(unittest.TestCase):
         text = render(result, "t", {})
         self.assertIn("[CAPITULATION] gave up", text)
         self.assertIn("capitulations: 1", text)
+
+    def test_transcript_records_usage_metadata(self) -> None:
+        result = run_debate("q?", make_engines(), DebateSettings(rotations=3))
+        usage = {"alpha": {"calls": 4, "input_tokens": 17, "output_tokens": 8}}
+        text = render(result, "t", {}, usage)
+        self.assertIn(
+            'usage: {"alpha": {"calls": 4, "input_tokens": 17, "output_tokens": 8}}',
+            text,
+        )
+        self.assertIn("usage: null", render(result, "t", {}))
 
 
 if __name__ == "__main__":
