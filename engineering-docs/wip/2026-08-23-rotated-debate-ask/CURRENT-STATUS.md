@@ -119,12 +119,31 @@ What shipped:
 
 ## Next Resumable Task
 
-Blocked on the owner injecting API keys (ANTHROPIC_API_KEY, OPENAI_API_KEY,
-GOOGLE_API_KEY) into the environment — not yet done as of session close
-2026-08-23. Then: `pip install -e .[engines]`; run
-`python -m rotated_debate ask "<harmless question>"`; verify the v0 default
-model bindings in `engines.DEFAULT_MODELS` against what the keys can
-actually reach; read the transcript and iterate the prompt templates. Then
-proceed per the settled order in new workstreams: `portfolio context`, then
-`portfolio debate`, then `sweep`
-(contract: `engineering-docs/specifications/debate-invocation.md`).
+Session closed 2026-08-27. The `ask` surface is feature-complete for v0
+and live-validated end to end: five archived transcripts
+(`tests/resources/test-debates/`) cover no-browse, browse, 2 rounds, and
+the last-synthesizer; usage metering, model-name reporting, flexible
+`--engines` resolution (Reading A), `--browse`, and
+`--add-last-synthesizer` all shipped and validated today. User docs
+started at `docs/rotated-debate.md`; cost model at
+`engineering-docs/design-notes/2026-08-27-cost-model.md`.
+
+Open when resuming, in rough priority order:
+
+1. **Owner task (agents: remind):** fill the console-actuals table in
+   the cost-model doc (five runs, 2026-08-27; predictions OpenAI ~$4.38 /
+   Google ~$1.41 tokens-only).
+2. **Open next workstream: `portfolio context`** — the owner-confirmed
+   order is `portfolio context`, then `portfolio debate`, then `sweep`
+   (contract: `engineering-docs/specifications/debate-invocation.md`).
+   Start with a design interview on what the context generator
+   assembles; the browse/no-browse transcript pair is the OQ-2 evidence
+   base for how context and browsing should combine.
+3. Deferred design question: strip browse from rotation synthesizers
+   (unrebutted-evidence rationale, recorded above).
+4. Backlog: Gemini/OpenAI search-count metering; Anthropic citation-URL
+   preservation in `_normalize_content`; prompt iteration (run-date
+   authority; rank last-synthesis disputes by materiality); doc/code
+   duplication of the alias table (pin with a test if drift bothers us).
+5. Housekeeping: archive the `vision-consolidation` workstream (still
+   marked ready in the registry).
