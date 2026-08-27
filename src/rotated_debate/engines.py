@@ -71,6 +71,20 @@ def record_usage(sink: UsageSink, alias: str, usage: Mapping[str, object] | None
             entry[key] = entry.get(key, 0) + value
 
 
+def engine_labels(specs: list[EngineSpec]) -> dict[str, str]:
+    """Alias -> reporting name: the bare model name, no provider prefix.
+
+    Aliases stay the invocation-side interface (CLI, env overrides); all
+    reporting (progress, transcript, usage) uses these labels. If two
+    aliases resolve to the same model, every label falls back to
+    "alias=model" so keys stay unique.
+    """
+    labels = {spec.alias: resolve_model_id(spec).rpartition(":")[2] for spec in specs}
+    if len(set(labels.values())) != len(labels):
+        labels = {alias: f"{alias}={label}" for alias, label in labels.items()}
+    return labels
+
+
 def _normalize_content(content: object) -> str:
     """LangChain content may be a string or a list of content blocks."""
     if isinstance(content, str):
@@ -117,14 +131,17 @@ def build_engines(
     temperature: float | None,
     usage_sink: UsageSink | None = None,
 ) -> dict[str, ChatFn]:
-    def reporter(alias: str) -> Callable[[Mapping[str, object] | None], None] | None:
+    """Engines keyed by reporting label (see engine_labels), not alias."""
+
+    def reporter(label: str) -> Callable[[Mapping[str, object] | None], None] | None:
         if usage_sink is None:
             return None
-        return lambda usage: record_usage(usage_sink, alias, usage)
+        return lambda usage: record_usage(usage_sink, label, usage)
 
+    labels = engine_labels(specs)
     return {
-        spec.alias: build_chat_fn(
-            resolve_model_id(spec), temperature, reporter(spec.alias)
+        labels[spec.alias]: build_chat_fn(
+            resolve_model_id(spec), temperature, reporter(labels[spec.alias])
         )
         for spec in specs
     }

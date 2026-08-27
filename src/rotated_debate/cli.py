@@ -81,7 +81,10 @@ def main(argv: list[str] | None = None) -> int:
 
     now = dt.datetime.now(dt.UTC)
     out = Path(args.out) if args.out else Path(f"debate-{now:%Y%m%d-%H%M%S}.md")
-    engine_models = {spec.alias: engine_mod.resolve_model_id(spec) for spec in specs}
+    labels = engine_mod.engine_labels(specs)
+    engine_models = {
+        labels[spec.alias]: engine_mod.resolve_model_id(spec) for spec in specs
+    }
     out.write_text(
         transcript.render(
             result, now.isoformat(timespec="seconds"), engine_models, usage_sink

@@ -9,6 +9,7 @@ from test_debate_protocol import make_engines
 from rotated_debate.cli import build_parser, main
 from rotated_debate.engines import (
     EngineSpec,
+    engine_labels,
     parse_engine_args,
     record_usage,
     resolve_model_id,
@@ -41,6 +42,24 @@ class EngineSpecTests(unittest.TestCase):
         self.assertEqual(
             resolve_model_id(EngineSpec(alias="claude")), "anthropic:claude-fable-5"
         )
+
+    def test_reporting_labels_are_bare_model_names(self) -> None:
+        labels = engine_labels(parse_engine_args("claude,gemini,chatgpt"))
+        self.assertEqual(
+            labels,
+            {
+                "claude": "claude-fable-5",
+                "gemini": "gemini-3.1-pro-preview",
+                "chatgpt": "gpt-5.6-sol",
+            },
+        )
+
+    def test_colliding_labels_fall_back_to_alias_qualified_form(self) -> None:
+        labels = engine_labels(
+            parse_engine_args("a=anthropic:claude-opus-5,b=anthropic:claude-opus-5,gemini")
+        )
+        self.assertEqual(len(set(labels.values())), 3)
+        self.assertEqual(labels["a"], "a=claude-opus-5")
 
 
 class UsageTests(unittest.TestCase):
