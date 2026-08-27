@@ -20,7 +20,9 @@ class DebateSettings:
     rotations: int = 3
     rounds: int = 1
     browse: bool = False
-    temperature: float = 0.3
+    # None means the provider's own default; current Anthropic and OpenAI
+    # models reject an explicit temperature outright (HTTP 400).
+    temperature: float | None = None
 
     def __post_init__(self) -> None:
         if self.rotations < 1:

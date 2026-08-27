@@ -63,7 +63,7 @@ def _normalize_content(content: object) -> str:
     return str(content)
 
 
-def build_chat_fn(model_id: str, temperature: float) -> ChatFn:
+def build_chat_fn(model_id: str, temperature: float | None) -> ChatFn:
     try:
         from langchain.chat_models import init_chat_model
     except ImportError as exc:  # pragma: no cover - environment-dependent
@@ -71,7 +71,10 @@ def build_chat_fn(model_id: str, temperature: float) -> ChatFn:
             "LangChain is not installed. Install the provider extra first:\n"
             "  pip install -e .[engines]"
         ) from exc
-    model = init_chat_model(model_id, temperature=temperature)
+    # Only forward temperature when the caller set one: current Anthropic and
+    # OpenAI models return a 400 for any explicit sampling parameter.
+    extra = {} if temperature is None else {"temperature": temperature}
+    model = init_chat_model(model_id, **extra)
 
     def chat(messages: list[tuple[str, str]]) -> str:
         return _normalize_content(model.invoke(messages).content)
@@ -79,7 +82,9 @@ def build_chat_fn(model_id: str, temperature: float) -> ChatFn:
     return chat
 
 
-def build_engines(specs: list[EngineSpec], temperature: float) -> dict[str, ChatFn]:
+def build_engines(
+    specs: list[EngineSpec], temperature: float | None
+) -> dict[str, ChatFn]:
     return {
         spec.alias: build_chat_fn(resolve_model_id(spec), temperature) for spec in specs
     }

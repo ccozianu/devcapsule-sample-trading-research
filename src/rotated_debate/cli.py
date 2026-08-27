@@ -27,7 +27,13 @@ def build_parser() -> argparse.ArgumentParser:
     ask.add_argument(
         "--browse", action=argparse.BooleanOptionalAction, default=False
     )
-    ask.add_argument("--temperature", type=float, default=0.3)
+    ask.add_argument(
+        "--temperature",
+        type=float,
+        default=None,
+        help="sampling temperature; omit for provider defaults (newer models "
+        "reject an explicit value)",
+    )
     ask.add_argument("--out", metavar="FILE")
     return parser
 
