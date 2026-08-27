@@ -85,7 +85,7 @@ what actually ran.
 | `--context FILE` | none | Prepend file(s) as shared context for every role; repeatable. |
 | `--rotations N` | 3 | Role-assignment triples to run. With 3 engines, 3 = every engine plays every role once (balanced); 6 = all permutations. |
 | `--rounds N` | 1 | Critique→rebuttal exchanges per rotation before synthesis. |
-| `--browse` | off | Not implemented in v0; exits with an error. |
+| `--browse` | off | Give every engine its vendor's server-side web-search tool (Anthropic web search, OpenAI web search via the Responses API, Google Search grounding). Search runs on the provider's servers and is billed per search, on top of tokens; Anthropic searches are capped at 5 per call. Only works for providers with a known browse tool (currently the three above) — others error. |
 | `--temperature T` | provider default | Only sent when set. Current Anthropic and OpenAI models reject an explicit temperature — leave unset unless you know the model accepts it. |
 | `--out FILE` | `debate-<timestamp>.md` | Transcript path. The only file the command writes. |
 
@@ -96,8 +96,10 @@ rotation's full exchange and synthesis. Frontmatter worth knowing:
 
 - `engines` — reporting label → `provider:model` actually used.
 - `usage` — per-engine consumption totals as reported by the provider
-  (token counts for all current bindings) plus a `calls` counter. This is
-  where you read what a debate cost.
+  (token counts for all current bindings) plus a `calls` counter, and —
+  on browsing runs, where the provider reports it — server-side search
+  counts (e.g. `web_search_requests`). This is where you read what a
+  debate cost.
 - `outcome_state` — reserves `deterministic_tally` (future) alongside the
   `synthesizer_meta` verdict aggregation; when both exist, divergence
   between them is a finding, not an error.

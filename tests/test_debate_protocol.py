@@ -99,9 +99,9 @@ class DebateTests(unittest.TestCase):
         result = run_debate("q?", engines, DebateSettings(rotations=3))
         self.assertNotEqual(result.provisional_state, "converged")
 
-    def test_browse_is_rejected_in_v0(self) -> None:
-        with self.assertRaises(NotImplementedError):
-            run_debate("q?", make_engines(), DebateSettings(browse=True))
+    def test_browse_setting_is_recorded_in_the_result(self) -> None:
+        result = run_debate("q?", make_engines(), DebateSettings(browse=True))
+        self.assertTrue(result.settings.browse)
 
     def test_progress_is_reported_before_each_engine_call(self) -> None:
         lines: list[str] = []

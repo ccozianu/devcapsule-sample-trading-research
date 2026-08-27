@@ -113,10 +113,8 @@ def run_debate(
     rotations answers once (DESIGN reuse rule). The exchange itself is
     per-rotation, since it depends on who criticizes.
     """
-    if settings.browse:
-        raise NotImplementedError(
-            "browsing is not implemented in v0 (invocation spec section 5)"
-        )
+    # settings.browse is recorded in the result; the browse tooling itself
+    # is bound onto the injected engines by their builder (engines.py).
     aliases = list(engines)
     triples = build_rotations(aliases, settings.rotations)
 

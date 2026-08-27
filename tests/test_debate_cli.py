@@ -1,16 +1,16 @@
 """CLI and transcript tests; no network, no LangChain."""
 
-import io
 import unittest
-from contextlib import redirect_stderr
 
 from test_debate_protocol import make_engines
 
-from rotated_debate.cli import build_parser, main
+from rotated_debate.cli import build_parser
 from rotated_debate.engines import (
     EngineSpec,
+    browse_tools_for,
     engine_labels,
     parse_engine_args,
+    record_server_tool_use,
     record_usage,
     resolve_model_id,
 )
@@ -99,12 +99,27 @@ class CliTests(unittest.TestCase):
             ("claude,gemini,chatgpt", 3, 1, False),
         )
 
-    def test_browse_exits_with_error_before_touching_providers(self) -> None:
-        stderr = io.StringIO()
-        with redirect_stderr(stderr):
-            code = main(["ask", "q?", "--browse"])
-        self.assertEqual(code, 2)
-        self.assertIn("not implemented", stderr.getvalue())
+    def test_browse_flag_parses(self) -> None:
+        self.assertTrue(build_parser().parse_args(["ask", "q?", "--browse"]).browse)
+
+
+class BrowseToolTests(unittest.TestCase):
+    def test_every_default_engine_has_vendor_browse_tooling(self) -> None:
+        for spec in parse_engine_args("claude,gemini,chatgpt"):
+            self.assertTrue(browse_tools_for(resolve_model_id(spec)))
+
+    def test_unknown_provider_is_a_clear_error(self) -> None:
+        with self.assertRaises(ValueError):
+            browse_tools_for("mistralai:mistral-large")
+
+    def test_server_tool_counts_fold_into_usage(self) -> None:
+        sink: dict[str, dict[str, int]] = {"e": {"calls": 1}}
+        record_server_tool_use(
+            sink, "e", {"usage": {"server_tool_use": {"web_search_requests": 3}}}
+        )
+        record_server_tool_use(sink, "e", {"usage": {}})
+        record_server_tool_use(sink, "e", None)
+        self.assertEqual(sink["e"], {"calls": 1, "web_search_requests": 3})
 
 
 class TranscriptTests(unittest.TestCase):

@@ -50,13 +50,6 @@ def _read_context(paths: list[str]) -> str | None:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    if args.browse:
-        print(
-            "error: --browse is not implemented in v0 "
-            "(engineering-docs/specifications/debate-invocation.md section 5)",
-            file=sys.stderr,
-        )
-        return 2
 
     from rotated_debate import engines as engine_mod
     from rotated_debate import protocol, transcript
@@ -64,12 +57,14 @@ def main(argv: list[str] | None = None) -> int:
     settings = DebateSettings(
         rotations=args.rotations,
         rounds=args.rounds,
-        browse=False,
+        browse=args.browse,
         temperature=args.temperature,
     )
     specs = engine_mod.parse_engine_args(args.engines)
     usage_sink: engine_mod.UsageSink = {}
-    chat_engines = engine_mod.build_engines(specs, args.temperature, usage_sink)
+    chat_engines = engine_mod.build_engines(
+        specs, args.temperature, usage_sink, browse=args.browse
+    )
     context = _read_context(args.context)
 
     def report(message: str) -> None:

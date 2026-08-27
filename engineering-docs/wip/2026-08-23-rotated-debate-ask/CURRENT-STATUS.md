@@ -67,6 +67,18 @@ What shipped:
   defensibly without live data (figures mixed 2023/2024/2025, no dated
   price snapshot) — direct support for browsing (or injected context) in
   decision-focused debates.
+- **`--browse` implemented (2026-08-27, spec §5 amendment):** each engine
+  gets its vendor's server-executed web-search tool bound via LangChain
+  `bind_tools` (Anthropic web_search_20260209 max_uses=5, OpenAI
+  web_search on the Responses API, Google Search grounding); protocol
+  stays tool-unaware. **Not yet live-tested.** First-run checks: the
+  Anthropic tool-version variant against claude-fable-5 (fall back to
+  web_search_20250305 on a 400), the OpenAI Responses-v1 content shape
+  through `_normalize_content`, and whether Gemini/OpenAI expose search
+  counts anywhere we can meter (only Anthropic's
+  usage.server_tool_use shape is folded into `usage` so far). Plan: run
+  the same GOOG question with `--browse` for a browse/no-browse
+  transcript pair on identical input (OQ-2 evidence).
 - Prompt iteration items from the first transcript: the critic misread
   the true system date as a hallucinated one; consider telling roles the
   run date is authoritative.

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 
 from rotated_debate.model import EngineSpec
 from rotated_debate.protocol import ChatFn
@@ -41,6 +41,28 @@ def infer_provider(model_name: str) -> str | None:
         if pattern.match(model_name):
             return provider
     return None
+
+
+# Vendor-native, server-executed web-search tools (spec section 1: every
+# engine gets its vendor's browse tooling). Search runs on the provider's
+# side, so invoke() still returns a final answer - no tool loop here.
+# max_uses bounds Anthropic search spend per call; the other providers do
+# not expose an equivalent cap in the tool payload.
+BROWSE_TOOLS: dict[str, list[dict[str, object]]] = {
+    "anthropic": [{"type": "web_search_20260209", "name": "web_search", "max_uses": 5}],
+    "openai": [{"type": "web_search"}],
+    "google_genai": [{"google_search": {}}],
+}
+
+
+def browse_tools_for(model_id: str) -> list[dict[str, object]]:
+    provider = model_id.partition(":")[0]
+    if provider not in BROWSE_TOOLS:
+        raise ValueError(
+            f"no browse (web-search) tool known for provider {provider!r}; "
+            f"supported: {', '.join(sorted(BROWSE_TOOLS))}"
+        )
+    return BROWSE_TOOLS[provider]
 
 
 def parse_engine_args(raw: str) -> list[EngineSpec]:
@@ -97,6 +119,29 @@ def record_usage(sink: UsageSink, alias: str, usage: Mapping[str, object] | None
             entry[key] = entry.get(key, 0) + value
 
 
+def record_server_tool_use(
+    sink: UsageSink, alias: str, response_metadata: Mapping[str, object] | None
+) -> None:
+    """Fold server-side tool counts (e.g. web searches) into the sink.
+
+    Searches are billed per search, separately from tokens. Reads the
+    Anthropic-documented shape usage.server_tool_use.{*_requests}; other
+    providers' shapes are folded in as their transcripts reveal them.
+    """
+    if not response_metadata:
+        return
+    usage = response_metadata.get("usage")
+    if not isinstance(usage, Mapping):
+        return
+    server_tool_use = usage.get("server_tool_use")
+    if not isinstance(server_tool_use, Mapping):
+        return
+    entry = sink.setdefault(alias, {"calls": 0})
+    for key, value in server_tool_use.items():
+        if isinstance(value, int) and not isinstance(value, bool):
+            entry[key] = entry.get(key, 0) + value
+
+
 def engine_labels(specs: list[EngineSpec]) -> dict[str, str]:
     """Alias -> reporting name: the bare model name, no provider prefix.
 
@@ -129,7 +174,9 @@ def _normalize_content(content: object) -> str:
 def build_chat_fn(
     model_id: str,
     temperature: float | None,
-    report_usage: Callable[[Mapping[str, object] | None], None] | None = None,
+    browse: bool = False,
+    usage_sink: UsageSink | None = None,
+    label: str | None = None,
 ) -> ChatFn:
     try:
         from langchain.chat_models import init_chat_model
@@ -140,13 +187,22 @@ def build_chat_fn(
         ) from exc
     # Only forward temperature when the caller set one: current Anthropic and
     # OpenAI models return a 400 for any explicit sampling parameter.
-    extra = {} if temperature is None else {"temperature": temperature}
+    extra: dict[str, object] = {} if temperature is None else {"temperature": temperature}
+    if browse and model_id.startswith("openai:"):
+        # OpenAI's server-side web_search tool lives on the Responses API.
+        extra["output_version"] = "responses/v1"
     model = init_chat_model(model_id, **extra)
+    if browse:
+        model = model.bind_tools(browse_tools_for(model_id))
+    sink_label = label if label is not None else model_id
 
     def chat(messages: list[tuple[str, str]]) -> str:
         response = model.invoke(messages)
-        if report_usage is not None:
-            report_usage(getattr(response, "usage_metadata", None))
+        if usage_sink is not None:
+            record_usage(usage_sink, sink_label, getattr(response, "usage_metadata", None))
+            record_server_tool_use(
+                usage_sink, sink_label, getattr(response, "response_metadata", None)
+            )
         return _normalize_content(response.content)
 
     return chat
@@ -156,18 +212,17 @@ def build_engines(
     specs: list[EngineSpec],
     temperature: float | None,
     usage_sink: UsageSink | None = None,
+    browse: bool = False,
 ) -> dict[str, ChatFn]:
     """Engines keyed by reporting label (see engine_labels), not alias."""
-
-    def reporter(label: str) -> Callable[[Mapping[str, object] | None], None] | None:
-        if usage_sink is None:
-            return None
-        return lambda usage: record_usage(usage_sink, label, usage)
-
     labels = engine_labels(specs)
     return {
         labels[spec.alias]: build_chat_fn(
-            resolve_model_id(spec), temperature, reporter(labels[spec.alias])
+            resolve_model_id(spec),
+            temperature,
+            browse=browse,
+            usage_sink=usage_sink,
+            label=labels[spec.alias],
         )
         for spec in specs
     }

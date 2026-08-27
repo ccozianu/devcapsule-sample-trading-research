@@ -103,3 +103,15 @@ Exactly the generic protocol of §1 plus, in order:
 - Provider access route (direct SDKs vs. router) — constrained by the
   requirement that every engine gets its vendor's browse tooling.
 - `resolve` automation beyond listing due entries.
+
+Amendment (accepted 2026-08-27): `--browse` is implemented for
+`rotated_debate ask`. Each engine gets its vendor's **server-executed**
+web-search tool, bound at engine construction through the LangChain layer
+(Anthropic web search, OpenAI web search via the Responses API, Google
+Search grounding) — the debate protocol itself remains tool-unaware, and
+invoke-returns-final-answer is preserved because search executes on the
+provider's servers. Providers without a known browse tool are a hard
+error under `--browse`. Search counts are folded into the transcript's
+`usage` frontmatter where the provider reports them.
+Browsing-evidence **tier labeling** in prompts/transcripts remains
+unspecified, as does browse policy for decision-focused debates (OQ-2).
