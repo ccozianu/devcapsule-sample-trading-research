@@ -90,6 +90,10 @@ What shipped:
 - Prompt iteration items from the first transcript: the critic misread
   the true system date as a hallucinated one; consider telling roles the
   run date is authoritative.
+- **OPEN owner task (2026-08-27):** verify the day's OpenAI and Google
+  console spend against
+  `engineering-docs/design-notes/2026-08-27-cost-model.md` and fill in
+  its Verification table (agents remind until done — see that doc).
 - Keys are exported only in the owner's terminal, not in the container
   profile; owner will set up shared access later. Until then, live runs
   are owner-executed.
