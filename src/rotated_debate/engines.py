@@ -9,17 +9,38 @@ by `langchain.chat_models.init_chat_model`.
 from __future__ import annotations
 
 import os
+import re
 from collections.abc import Callable, Mapping
 
 from rotated_debate.model import EngineSpec
 from rotated_debate.protocol import ChatFn
 
+# The vendor aliases are the project's *curated pick* of each vendor's most
+# capable model, pinned here and changed only by a deliberate commit (owner
+# decision 2026-08-27, "Reading A"): what ran must be auditable in git log,
+# never silently upgraded, because the evals ledger scores predictions
+# across months. Staleness surfaces as a provider 404 on first use.
 DEFAULT_MODELS = {
     "claude": "anthropic:claude-fable-5",
     "chatgpt": "openai:gpt-5.6-sol",
     "gemini": "google_genai:gemini-3.1-pro-preview",
 }
 ENV_PREFIX = "ROTATED_DEBATE_MODEL_"  # e.g. ROTATED_DEBATE_MODEL_CLAUDE
+
+# Bare model names accepted directly in --engines; the provider is inferred
+# from the name's shape. Anything else needs the explicit provider:model form.
+MODEL_NAME_PATTERNS = (
+    (re.compile(r"^claude-"), "anthropic"),
+    (re.compile(r"^gemini-"), "google_genai"),
+    (re.compile(r"^(gpt-|o\d)"), "openai"),
+)
+
+
+def infer_provider(model_name: str) -> str | None:
+    for pattern, provider in MODEL_NAME_PATTERNS:
+        if pattern.match(model_name):
+            return provider
+    return None
 
 
 def parse_engine_args(raw: str) -> list[EngineSpec]:
@@ -35,7 +56,7 @@ def parse_engine_args(raw: str) -> list[EngineSpec]:
 
 
 def resolve_model_id(spec: EngineSpec) -> str:
-    """Priority: env override > explicit binding > built-in default."""
+    """Priority: env override > explicit binding > curated alias > name pattern."""
     env_override = os.environ.get(ENV_PREFIX + spec.alias.upper())
     if env_override:
         return env_override
@@ -43,8 +64,13 @@ def resolve_model_id(spec: EngineSpec) -> str:
         return spec.provider_model
     if spec.alias in DEFAULT_MODELS:
         return DEFAULT_MODELS[spec.alias]
+    provider = infer_provider(spec.alias)
+    if provider:
+        return f"{provider}:{spec.alias}"
     raise ValueError(
-        f"engine {spec.alias!r} has no model binding; use alias=provider:model "
+        f"engine {spec.alias!r} has no model binding; use a vendor alias "
+        f"({', '.join(sorted(DEFAULT_MODELS))}), a model name matching "
+        f"claude-*/gemini-*/gpt-*/o<digit>*, the alias=provider:model form, "
         f"or set {ENV_PREFIX}{spec.alias.upper()}"
     )
 

@@ -80,6 +80,14 @@ Read these in order; they are deliberately non-overlapping:
 The sanitized demo portfolio lives at `data/snapshots/` (format documented
 there). Raw brokerage exports are never committed: sanitize, then delete.
 
+## User documentation
+
+User-facing guides live under `docs/`:
+
+- [`docs/rotated-debate.md`](docs/rotated-debate.md) — running
+  `python -m rotated_debate ask`: engine selection (vendor aliases, bare
+  model names, explicit bindings), flags, and reading the transcript.
+
 ## Development
 
 Requires Python 3.12 or newer. Bootstrap a repository-local developer

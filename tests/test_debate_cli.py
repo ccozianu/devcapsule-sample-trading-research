@@ -34,6 +34,16 @@ class EngineSpecTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             resolve_model_id(EngineSpec(alias="mystery"))
 
+    def test_bare_model_names_infer_their_provider(self) -> None:
+        cases = {
+            "claude-sonnet-5": "anthropic:claude-sonnet-5",
+            "gemini-3.1-pro-preview": "google_genai:gemini-3.1-pro-preview",
+            "gpt-5.5-pro": "openai:gpt-5.5-pro",
+            "o4-mini": "openai:o4-mini",
+        }
+        for name, expected in cases.items():
+            self.assertEqual(resolve_model_id(EngineSpec(alias=name)), expected)
+
     def test_explicit_binding_wins_over_defaults(self) -> None:
         spec = EngineSpec(alias="claude", provider_model="anthropic:claude-opus-5")
         self.assertEqual(resolve_model_id(spec), "anthropic:claude-opus-5")

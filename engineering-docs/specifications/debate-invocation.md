@@ -15,6 +15,19 @@ python -m rotated_debate ask "<question>" [--context FILE ...]
 
 Contract:
 
+- `--engines` items resolve in priority order (amendment accepted
+  2026-08-27): env override (`ROTATED_DEBATE_MODEL_<NAME>`) > explicit
+  `name=provider:model` binding > vendor alias > bare model name matching
+  a known pattern (`claude-*`, `gemini-*`, `gpt-*`/`o<digit>*` — provider
+  inferred). A vendor alias (`claude`, `gemini`, `chatgpt`) is the
+  project's **curated pick of that vendor's most capable model, pinned in
+  code and changed only by commit** — never runtime-discovered, so the
+  model behind an alias on any date is auditable in git history ("Reading
+  A", owner decision 2026-08-27; rationale: the evals ledger scores
+  predictions across months, so a silent model upgrade would corrupt the
+  longitudinal record). Reporting (transcript, progress) always uses the
+  resolved model name, not the alias.
+
 - Reads nothing except the given `--context` files; writes nothing except
   `--out`. No knowledge of this repository, portfolios, or routing tables.
 - Defaults: three engines, 3 rotations, 1 round, no browsing.
