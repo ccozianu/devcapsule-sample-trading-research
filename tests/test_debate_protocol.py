@@ -117,6 +117,47 @@ class DebateTests(unittest.TestCase):
     def test_progress_is_optional(self) -> None:
         run_debate("q?", make_engines(), DebateSettings(rotations=3))
 
+    def test_last_synthesizer_judges_only_the_syntheses(self) -> None:
+        seen: list[list[tuple[str, str]]] = []
+
+        def judge(messages: list[tuple[str, str]]) -> str:
+            seen.append(messages)
+            return (
+                'verdict text\n```json\n{"verdict": "diverged",'
+                ' "factual_agreements": ["price"], "factual_disputes": [],'
+                ' "reasoning_agreements": [], "reasoning_disputes": ["odds"]}\n```'
+            )
+
+        result = run_debate(
+            "q?",
+            make_engines(),
+            DebateSettings(rotations=3),
+            last_synthesizer=("flash", judge),
+        )
+        assert result.last_synthesis is not None
+        self.assertEqual(result.last_synthesis.engine, "flash")
+        self.assertEqual(result.last_synthesis.verdict, "diverged")
+        self.assertEqual(result.last_synthesis.factual_agreements, ("price",))
+        self.assertEqual(result.last_synthesis.reasoning_disputes, ("odds",))
+        # The judge's verdict never changes the provisional state (OQ-1 open).
+        self.assertEqual(result.provisional_state, "converged")
+        # The judge sees the syntheses and nothing of the raw exchange.
+        (messages,) = seen
+        user_content = messages[-1][1]
+        self.assertIn("SYNTHESIS by", user_content)
+        self.assertNotIn("criticizes", user_content)
+
+    def test_unparseable_last_synthesis_is_recorded_not_raised(self) -> None:
+        result = run_debate(
+            "q?",
+            make_engines(),
+            DebateSettings(rotations=3),
+            last_synthesizer=("flash", lambda messages: "prose only"),
+        )
+        assert result.last_synthesis is not None
+        self.assertIsNone(result.last_synthesis.verdict)
+        self.assertIsNotNone(result.last_synthesis.parse_error)
+
 
 class ParsingTests(unittest.TestCase):
     def test_fenced_block_is_preferred(self) -> None:

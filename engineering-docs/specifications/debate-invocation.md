@@ -115,3 +115,18 @@ error under `--browse`. Search counts are folded into the transcript's
 `usage` frontmatter where the provider reports them.
 Browsing-evidence **tier labeling** in prompts/transcripts remains
 unspecified, as does browse policy for decision-focused debates (OQ-2).
+
+Amendment (accepted 2026-08-27): `--add-last-synthesizer MODEL` adds an
+optional final synthesis over the rotation syntheses, produced by a
+model that took no part in the debate. The last synthesizer is a judge
+of the record, not a participant: it **never browses** and is confined
+to the text at hand — anything it added itself would enter the record
+unrebutted — and it reports agreement/disagreement **on facts and on
+reasoning as separate axes**. Its verdict is recorded in
+`outcome_state.last_synthesizer_verdict` as a third candidate alongside
+the deterministic tally and the synthesizer meta-aggregation; it never
+replaces the reported provisional state (OQ-1 stays open; divergence
+between candidates is a finding). Deliberately deferred: whether the
+three *rotation* synthesizers should also lose browse access — the same
+unrebutted-evidence argument applies to them, but restricting per-role
+tooling is a larger change and awaits transcript evidence.

@@ -17,6 +17,7 @@ from rotated_debate.model import (
     DebateResult,
     DebateSettings,
     ExchangeRound,
+    LastSynthesis,
     Rebuttal,
     RotationRecord,
     Synthesis,
@@ -100,12 +101,29 @@ def _parse_synthesis(engine: str, text: str) -> Synthesis:
     )
 
 
+def _parse_last_synthesis(engine: str, text: str) -> LastSynthesis:
+    data, error = parsing.extract_json_block(text)
+    if data is None:
+        return LastSynthesis(engine=engine, text=text, parse_error=error)
+    verdict = data.get("verdict")
+    return LastSynthesis(
+        engine=engine,
+        text=text,
+        verdict=verdict if verdict in ("converged", "diverged") else None,
+        factual_agreements=parsing.string_list(data.get("factual_agreements")),
+        factual_disputes=parsing.string_list(data.get("factual_disputes")),
+        reasoning_agreements=parsing.string_list(data.get("reasoning_agreements")),
+        reasoning_disputes=parsing.string_list(data.get("reasoning_disputes")),
+    )
+
+
 def run_debate(
     question: str,
     engines: Mapping[str, ChatFn],
     settings: DebateSettings,
     context: str | None = None,
     on_progress: ProgressFn | None = None,
+    last_synthesizer: tuple[str, ChatFn] | None = None,
 ) -> DebateResult:
     """Run the full bounded debate and return its structured record.
 
@@ -172,6 +190,16 @@ def run_debate(
             )
         )
 
+    last_synthesis: LastSynthesis | None = None
+    if last_synthesizer is not None:
+        judge_name, judge = last_synthesizer
+        note(f"last synthesis: {judge_name} synthesizing the syntheses")
+        syntheses = [
+            (record.synthesizer, record.synthesis.text) for record in rotations
+        ]
+        last_text = judge(prompts.last_synthesizer_messages(question, syntheses))
+        last_synthesis = _parse_last_synthesis(judge_name, last_text)
+
     return DebateResult(
         question=question,
         engines=tuple(aliases),
@@ -179,4 +207,5 @@ def run_debate(
         answers=answers,
         rotations=tuple(rotations),
         context_note=context if context is None else f"{len(context)} chars supplied",
+        last_synthesis=last_synthesis,
     )

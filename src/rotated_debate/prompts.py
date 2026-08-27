@@ -70,6 +70,39 @@ def rebuttal_messages(
     ]
 
 
+def last_synthesizer_messages(
+    question: str, syntheses: list[tuple[str, str]]
+) -> list[Message]:
+    """The final, text-only synthesis over the rotation syntheses.
+
+    The last synthesizer is a judge of the record, not a participant:
+    anything it added on its own would enter the record unrebutted, so it
+    is explicitly confined to the text at hand.
+    """
+    presented = "\n\n".join(
+        f"--- SYNTHESIS by {engine} ---\n{text}" for engine, text in syntheses
+    )
+    return [
+        (
+            "system",
+            "You are the LAST SYNTHESIZER in a structured multi-model debate. "
+            "Several engines debated the question and independent synthesizers "
+            "each produced a synthesis; those syntheses are the ONLY material "
+            "before you. Base your judgment solely on the text at hand: do not "
+            "research, do not add facts, figures, estimates, or outside "
+            "knowledge — anything you added yourself would enter the record "
+            "unrebutted. Compare the syntheses and report, separately, where "
+            "they agree and disagree ON FACTS and where they agree and "
+            "disagree ON REASONING. Agreement is an observation, not a "
+            "correctness score. End your reply with a fenced ```json block: "
+            '{"verdict": "converged|diverged", "factual_agreements": ["..."], '
+            '"factual_disputes": ["..."], "reasoning_agreements": ["..."], '
+            '"reasoning_disputes": ["..."]}',
+        ),
+        ("user", f"Question: {question}\n\nThe syntheses:\n\n{presented}"),
+    ]
+
+
 def synthesizer_messages(
     question: str, answer: str, exchange: str, context: str | None
 ) -> list[Message]:

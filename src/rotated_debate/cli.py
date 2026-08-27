@@ -28,6 +28,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--browse", action=argparse.BooleanOptionalAction, default=False
     )
     ask.add_argument(
+        "--add-last-synthesizer",
+        metavar="MODEL",
+        default=None,
+        help="add a final text-only synthesis over the rotation syntheses, "
+        "produced by MODEL (same forms as --engines items); never browses",
+    )
+    ask.add_argument(
         "--temperature",
         type=float,
         default=None,
@@ -70,8 +77,32 @@ def main(argv: list[str] | None = None) -> int:
     def report(message: str) -> None:
         print(message, file=sys.stderr, flush=True)
 
+    last_synthesizer = None
+    last_spec = None
+    if args.add_last_synthesizer:
+        (last_spec,) = engine_mod.parse_engine_args(args.add_last_synthesizer)
+        last_label = engine_mod.engine_labels([last_spec])[last_spec.alias]
+        if last_label in engine_mod.engine_labels(specs).values():
+            last_label = f"{last_label} (last-synthesizer)"
+        # The last synthesizer judges only the text at hand - never browses.
+        last_synthesizer = (
+            last_label,
+            engine_mod.build_chat_fn(
+                engine_mod.resolve_model_id(last_spec),
+                args.temperature,
+                browse=False,
+                usage_sink=usage_sink,
+                label=last_label,
+            ),
+        )
+
     result = protocol.run_debate(
-        args.question, chat_engines, settings, context, on_progress=report
+        args.question,
+        chat_engines,
+        settings,
+        context,
+        on_progress=report,
+        last_synthesizer=last_synthesizer,
     )
 
     now = dt.datetime.now(dt.UTC)
@@ -80,6 +111,8 @@ def main(argv: list[str] | None = None) -> int:
     engine_models = {
         labels[spec.alias]: engine_mod.resolve_model_id(spec) for spec in specs
     }
+    if last_synthesizer is not None and last_spec is not None:
+        engine_models[last_synthesizer[0]] = engine_mod.resolve_model_id(last_spec)
     out.write_text(
         transcript.render(
             result, now.isoformat(timespec="seconds"), engine_models, usage_sink

@@ -23,7 +23,11 @@ def render(
 ) -> str:
     reasoned = sum(1 for c in result.concessions if not c.capitulation)
     capitulations = sum(1 for c in result.concessions if c.capitulation)
-    parse_errors = [
+    parse_errors = (
+        [f"{result.last_synthesis.engine}:last_synthesis"]
+        if result.last_synthesis and result.last_synthesis.parse_error
+        else []
+    ) + [
         f"{record.synthesis.engine}:synthesis"
         for record in result.rotations
         if record.synthesis.parse_error
@@ -55,10 +59,23 @@ def render(
             "synthesizer": record.synthesizer,
         }
         lines.append(f"  - {json.dumps(triple)}")
+    last = result.last_synthesis
     lines.append("outcome_state:")
     lines.append(_fm("deterministic_tally", None, indent=2))
     lines.append(_fm("synthesizer_meta", result.provisional_state, indent=2))
     lines.append(_fm("synthesizer_verdicts", result.synthesizer_verdicts, indent=2))
+    # Third outcome candidate (recorded alongside, never replacing - OQ-1):
+    # the optional text-only last synthesis over the rotation syntheses.
+    lines.append(_fm("last_synthesizer_verdict", last.verdict if last else None, indent=2))
+    if last is not None:
+        lines.append("last_synthesis:")
+        lines.append(_fm("engine", last.engine, indent=2))
+        lines.append(_fm("factual_agreements", list(last.factual_agreements), indent=2))
+        lines.append(_fm("factual_disputes", list(last.factual_disputes), indent=2))
+        lines.append(
+            _fm("reasoning_agreements", list(last.reasoning_agreements), indent=2)
+        )
+        lines.append(_fm("reasoning_disputes", list(last.reasoning_disputes), indent=2))
     lines.append("concessions:")
     lines.append(_fm("reasoned", reasoned, indent=2))
     lines.append(_fm("capitulations", capitulations, indent=2))
@@ -72,6 +89,10 @@ def render(
         f"{result.provisional_state.upper()}.** Agreement is an observed state, "
         "never a correctness score.\n"
     )
+
+    if last is not None:
+        lines.append(f"## Last synthesis — {last.engine} (text-only judge)\n")
+        lines.append(last.text + "\n")
 
     lines.append("## Answers\n")
     for alias, answer in result.answers.items():

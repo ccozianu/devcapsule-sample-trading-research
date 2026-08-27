@@ -76,6 +76,25 @@ class Synthesis:
 
 
 @dataclass(frozen=True, slots=True)
+class LastSynthesis:
+    """The optional final, text-only synthesis over the rotation syntheses.
+
+    Its verdict is recorded alongside the other outcome candidates, never
+    replacing them (OQ-1 stays open); facts and reasoning are reported as
+    separate axes of agreement.
+    """
+
+    engine: str
+    text: str
+    verdict: str | None = None
+    factual_agreements: tuple[str, ...] = ()
+    factual_disputes: tuple[str, ...] = ()
+    reasoning_agreements: tuple[str, ...] = ()
+    reasoning_disputes: tuple[str, ...] = ()
+    parse_error: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class RotationRecord:
     answerer: str
     critic: str
@@ -92,6 +111,7 @@ class DebateResult:
     answers: dict[str, str]
     rotations: tuple[RotationRecord, ...]
     context_note: str | None = None
+    last_synthesis: LastSynthesis | None = None
 
     @property
     def concessions(self) -> tuple[Concession, ...]:

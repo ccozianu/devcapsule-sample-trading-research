@@ -140,6 +140,29 @@ class TranscriptTests(unittest.TestCase):
         self.assertIn("[CAPITULATION] gave up", text)
         self.assertIn("capitulations: 1", text)
 
+    def test_transcript_records_last_synthesis(self) -> None:
+        judge_reply = (
+            'digest\n```json\n{"verdict": "converged", "factual_agreements": ["f"],'
+            ' "factual_disputes": [], "reasoning_agreements": [],'
+            ' "reasoning_disputes": ["r"]}\n```'
+        )
+        result = run_debate(
+            "q?",
+            make_engines(),
+            DebateSettings(rotations=3),
+            last_synthesizer=("flash", lambda messages: judge_reply),
+        )
+        text = render(result, "t", {})
+        self.assertIn('last_synthesizer_verdict: "converged"', text)
+        self.assertIn('factual_agreements: ["f"]', text)
+        self.assertIn("## Last synthesis — flash (text-only judge)", text)
+
+    def test_transcript_without_last_synthesis_records_null_verdict(self) -> None:
+        result = run_debate("q?", make_engines(), DebateSettings(rotations=3))
+        text = render(result, "t", {})
+        self.assertIn("last_synthesizer_verdict: null", text)
+        self.assertNotIn("## Last synthesis", text)
+
     def test_transcript_records_usage_metadata(self) -> None:
         result = run_debate("q?", make_engines(), DebateSettings(rotations=3))
         usage = {"alpha": {"calls": 4, "input_tokens": 17, "output_tokens": 8}}

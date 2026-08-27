@@ -87,6 +87,18 @@ What shipped:
   tier labeling. Cost: ~8x the no-browse baseline (~$7.50 vs ~$0.95),
   dominated by Fable's 19 searches / 471k input tokens; the max_uses=5
   per-call cap was nearly saturated (19 of 20).
+- **`--add-last-synthesizer` implemented (2026-08-27, spec §5
+  amendment):** optional final text-only synthesis over the rotation
+  syntheses by a non-participant model; never browses; reports
+  facts-vs-reasoning agreement separately; verdict recorded as a third
+  OQ-1 candidate (`outcome_state.last_synthesizer_verdict`), never
+  replacing the state line. Awaiting first live run.
+- **Deferred design question (owner, 2026-08-27):** should the three
+  rotation synthesizers also lose browse access? Rationale for yes:
+  evidence introduced at synthesis is unrebutted (nobody criticizes the
+  synthesizer) — the browse transcripts show synthesizers researching.
+  Requires per-role tool binding (protocol currently uses one ChatFn per
+  engine for all roles). Decide after transcript evidence accumulates.
 - Prompt iteration items from the first transcript: the critic misread
   the true system date as a hallucinated one; consider telling roles the
   run date is authoritative.

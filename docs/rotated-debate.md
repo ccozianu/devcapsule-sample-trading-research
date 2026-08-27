@@ -87,6 +87,7 @@ what actually ran.
 | `--rounds N` | 1 | Critique→rebuttal exchanges per rotation before synthesis. |
 | `--browse` | off | Give every engine its vendor's server-side web-search tool (Anthropic web search, OpenAI web search via the Responses API, Google Search grounding). Search runs on the provider's servers and is billed per search, on top of tokens; Anthropic searches are capped at 5 per call. Only works for providers with a known browse tool (currently the three above) — others error. |
 | `--temperature T` | provider default | Only sent when set. Current Anthropic and OpenAI models reject an explicit temperature — leave unset unless you know the model accepts it. |
+| `--add-last-synthesizer MODEL` | off | Add a final synthesis over the rotation syntheses, produced by `MODEL` (any form `--engines` items accept, e.g. `gemini-3.7-flash`). The last synthesizer is a judge of the record, not a participant: it **never browses**, is instructed to use only the text at hand, and reports agreement/disagreement on facts and on reasoning separately. Its verdict is recorded alongside the others in `outcome_state` — it does not change the reported `state=` line. |
 | `--out FILE` | `debate-<timestamp>.md` | Transcript path. The only file the command writes. |
 
 ## The transcript
@@ -101,8 +102,12 @@ rotation's full exchange and synthesis. Frontmatter worth knowing:
   counts (e.g. `web_search_requests`). This is where you read what a
   debate cost.
 - `outcome_state` — reserves `deterministic_tally` (future) alongside the
-  `synthesizer_meta` verdict aggregation; when both exist, divergence
-  between them is a finding, not an error.
+  `synthesizer_meta` verdict aggregation and, when
+  `--add-last-synthesizer` was used, the `last_synthesizer_verdict` with
+  its facts/reasoning agreement lists; the candidates are recorded side
+  by side, and divergence between them is a finding, not an error. The
+  last synthesis also appears as the first section of the transcript
+  body — it is the digest to read first.
 - `concessions` — reasoned concessions vs. capitulations (a concession
   without a stated reason).
 - `parse_errors` — engines whose structured JSON block could not be
