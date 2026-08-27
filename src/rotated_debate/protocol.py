@@ -23,6 +23,9 @@ from rotated_debate.model import (
 )
 
 ChatFn = Callable[[list[prompts.Message]], str]
+# Called with a short human-readable line before each engine call; the core
+# never writes to stdout/stderr itself, so reporting stays a caller concern.
+ProgressFn = Callable[[str], None]
 
 
 def build_rotations(aliases: Sequence[str], count: int) -> list[tuple[str, str, str]]:
@@ -102,6 +105,7 @@ def run_debate(
     engines: Mapping[str, ChatFn],
     settings: DebateSettings,
     context: str | None = None,
+    on_progress: ProgressFn | None = None,
 ) -> DebateResult:
     """Run the full bounded debate and return its structured record.
 
@@ -116,23 +120,32 @@ def run_debate(
     aliases = list(engines)
     triples = build_rotations(aliases, settings.rotations)
 
+    def note(message: str) -> None:
+        if on_progress is not None:
+            on_progress(message)
+
     answers: dict[str, str] = {}
 
     def answer_of(alias: str) -> str:
         if alias not in answers:
+            note(f"{alias} answering")
             answers[alias] = engines[alias](prompts.answerer_messages(question, context))
         return answers[alias]
 
     rotations: list[RotationRecord] = []
-    for answerer, critic, synthesizer in triples:
+    for index, (answerer, critic, synthesizer) in enumerate(triples, start=1):
+        tag = f"rotation {index}/{len(triples)}"
         answer = answer_of(answerer)
         rounds: list[ExchangeRound] = []
         exchange_text = ""
         latest_position = answer
-        for _ in range(settings.rounds):
+        for round_no in range(1, settings.rounds + 1):
+            round_tag = f"{tag} round {round_no}/{settings.rounds}"
+            note(f"{round_tag}: {critic} critiquing {answerer}")
             critique_text = engines[critic](
                 prompts.critic_messages(question, latest_position, context)
             )
+            note(f"{round_tag}: {answerer} rebutting")
             rebuttal_text = engines[answerer](
                 prompts.rebuttal_messages(question, latest_position, critique_text, context)
             )
@@ -147,6 +160,7 @@ def run_debate(
                 f"\n--- REBUTTAL by {answerer} ---\n{rebuttal_text}\n"
             )
             latest_position = rebuttal_text
+        note(f"{tag}: {synthesizer} synthesizing")
         synthesis_text = engines[synthesizer](
             prompts.synthesizer_messages(question, answer, exchange_text, context)
         )

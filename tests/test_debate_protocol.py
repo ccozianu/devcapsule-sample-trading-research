@@ -103,6 +103,20 @@ class DebateTests(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             run_debate("q?", make_engines(), DebateSettings(browse=True))
 
+    def test_progress_is_reported_before_each_engine_call(self) -> None:
+        lines: list[str] = []
+        run_debate(
+            "q?", make_engines(), DebateSettings(rotations=3), on_progress=lines.append
+        )
+        # 3 memoized answers + per rotation: 1 critique + 1 rebuttal + 1 synthesis.
+        self.assertEqual(len(lines), 3 + 3 * 3)
+        self.assertEqual(lines[0], "alpha answering")
+        self.assertIn("rotation 1/3 round 1/1: beta critiquing alpha", lines)
+        self.assertIn("rotation 3/3: beta synthesizing", lines)
+
+    def test_progress_is_optional(self) -> None:
+        run_debate("q?", make_engines(), DebateSettings(rotations=3))
+
 
 class ParsingTests(unittest.TestCase):
     def test_fenced_block_is_preferred(self) -> None:

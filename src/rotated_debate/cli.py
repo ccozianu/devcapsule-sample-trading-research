@@ -71,7 +71,12 @@ def main(argv: list[str] | None = None) -> int:
     chat_engines = engine_mod.build_engines(specs, args.temperature)
     context = _read_context(args.context)
 
-    result = protocol.run_debate(args.question, chat_engines, settings, context)
+    def report(message: str) -> None:
+        print(message, file=sys.stderr, flush=True)
+
+    result = protocol.run_debate(
+        args.question, chat_engines, settings, context, on_progress=report
+    )
 
     now = dt.datetime.now(dt.UTC)
     out = Path(args.out) if args.out else Path(f"debate-{now:%Y%m%d-%H%M%S}.md")

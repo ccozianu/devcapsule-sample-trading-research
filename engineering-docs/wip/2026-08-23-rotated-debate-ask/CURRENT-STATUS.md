@@ -16,9 +16,15 @@ Integration target: `main` (`direct-main`).
 
 ## Current Task
 
-First live run in progress (2026-08-27). The owner runs the e2e in their
-own terminal (API keys are not visible to Claude's shell in this
-container). Three launch bugs found and fixed on `main`:
+**First live run succeeded (2026-08-27):** three engines, 3 rotations,
+1 round, on a real question (GOOG valuation). `state=converged`,
+`parse_errors: []` across all nine structured outputs, 15 reasoned
+concessions / 0 capitulations — the D4 distinction and the reflexive
+teardown behavior both showed up in practice (Gemini's synthesis records
+the original answerer accepting a full teardown of its valuation
+framework). Owner ran it in their terminal (keys are not visible to
+Claude's shell in this container). Three launch bugs found and fixed on
+`main` beforehand:
 
 - `22a8702` — explicit `temperature=0.3` default removed; current
   Anthropic and OpenAI models 400 on any explicit sampling parameter.
@@ -52,15 +58,21 @@ What shipped:
 
 ## Open Threads
 
-- **Progress reporting (owner feedback, 2026-08-27):** the CLI is silent
-  for minutes during a live run; emit progress to stderr (per-rotation /
-  per-role-call lines). Deferred until the in-flight e2e finishes — the
-  package is installed `-e`, so editing `src/` would affect the running
-  process.
+- **Done — progress reporting (owner feedback, 2026-08-27):**
+  `protocol.run_debate` takes an optional `on_progress` callback (core
+  stays print-free); the CLI wires it to one-line stderr messages before
+  every engine call.
+- **Live-run evidence for OQ-2/S9:** all three synthesizers independently
+  flagged that a "right now" valuation question cannot be answered
+  defensibly without live data (figures mixed 2023/2024/2025, no dated
+  price snapshot) — direct support for browsing (or injected context) in
+  decision-focused debates.
+- Prompt iteration items from the first transcript: the critic misread
+  the true system date as a hallucinated one; consider telling roles the
+  run date is authoritative.
 - Keys are exported only in the owner's terminal, not in the container
   profile; owner will set up shared access later. Until then, live runs
   are owner-executed.
-- Prompt templates are first-cut; iterate against real transcripts.
 - OQ-1 unchanged: transcript frontmatter records `deterministic_tally: null`
   and the provisional `synthesizer_meta` aggregation, ready for comparison.
 
