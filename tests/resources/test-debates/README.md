@@ -13,3 +13,10 @@ Filenames carry the transcript's own `generated_at` timestamp
   claude-fable-5 and the `usage:` frontmatter feature: all three engines
   reported token counts (claude 22.0k / gemini 18.5k / chatgpt 13.6k
   total tokens over 4 calls each), `state=converged`, zero parse errors.
+- `20260827-111059-GOOG-browse-debate.md` — same question with
+  `--browse` (the no-browse counterpart pair for OQ-2). All engines
+  cite live Aug-2026 data; the debate caught and settled real factual
+  errors against primary sources (Gemini's "$85B equity raise" ruled
+  false vs. the SEC 10-Q's $49.6B; Fable's 17.4x P/E exposed as a $99B
+  one-off-gain artifact). Fable made 19 web searches and 471k input
+  tokens (~$6 of the ~$7.50 total). `state=converged`, zero parse errors.
