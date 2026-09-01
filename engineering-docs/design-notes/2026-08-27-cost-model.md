@@ -98,3 +98,55 @@ These daily actuals validate the aggregate cost model to about $0.71 (2.2%)
 while confirming that provider-reported transcript metadata is insufficient
 for exact per-run allocation. Do not use the aggregate deltas to invent search
 counts or charges for an individual transcript.
+
+## Cost/quality review of the GOOG run set (2026-09-01)
+
+This is a traceable qualitative review of the five 2026-08-27 transcripts,
+not a model benchmark. The runs repeatedly ask one question, have no resolved
+ground-truth valuation, and use the same role order. Model identity, role, and
+question are therefore confounded. The console figures are daily aggregates,
+not exact per-call allocations; Google/OpenAI search metering is incomplete;
+and the 10:08 Claude transcript/console model attribution differs as recorded
+above.
+
+Actual daily cost ratios were approximately **5.4x Anthropic/OpenAI**,
+**15.6x Anthropic/Google**, and **2.9x OpenAI/Google**. Those ratios measure
+provider spend, not output quality.
+
+| Model/provider | Observed strengths | Material failures or limits | Cost/quality reading |
+|---|---|---|---|
+| Claude Fable 5 / Anthropic ($26.39 daily total, with the attribution caveat above) | Strongest exhaustive source audit and most nuanced detection of over-concession. In critic and synthesizer roles it caught unsupported valuation ranges, stale or ephemeral price evidence, critic overstatement, and the distinction between completed financing and authorized capacity. | Its own answer in the final run relied on the distorted headline P/E and omitted the financing side, then had to withdraw the undervaluation conclusion. Its browsing produced very large, highly variable contexts and long outputs; some secondary-source claims also required later qualification. | The premium bought real verification depth, but the transcripts do not support a 5.4x quality advantage over GPT or a 15.6x advantage over Google. Poor routine value; plausible selective value for a high-assurance audit. |
+| GPT-5.6-sol / OpenAI ($4.88) | Best all-round performance in this sample. Its browsed initial answer already surfaced non-operating gains, capex, negative quarterly FCF, financing, dilution, and regulatory risk. Its syntheses most consistently separated “undervaluation not demonstrated” from “overvalued” and corrected excess bearish rhetoric. | It introduced underived bear/base/bull price ranges, leaned on ephemeral aggregator metrics, and briefly conceded an adjusted-EPS “miss” that was definition-sensitive. The second round was needed to remove those claims. | Best observed full-spectrum cost/quality balance. It was not error-free, but it contributed the most decision-relevant analysis per dollar among the three participant models. |
+| Gemini 3.1 Pro / Google ($1.69 total including a Flash judge below visible billing precision) | As critic, it found the decisive flaw in the Claude answer: the 17x P/E was distorted by enormous unrealized investment gains. It also challenged the temporary-capex framing. Gemini 3.7 Flash compressed the three syntheses faithfully and separated factual from reasoning agreement at negligible visible marginal cost. | Gemini Pro's own answer was the weakest initial answer: categorical “excellent entry point,” 8/10 confidence, undefined “operating P/E,” and unsupported claims that regulation explained the discount and capex already proved adequate returns. For a GOOG topic, both Pro and Flash also carry the maker conflict recorded in `portfolio/ROUTING.md`; the domain-agnostic `ask` surface does not prune that conflict. Flash summarized existing evidence but added no independent verification. | Excellent low-cost adversarial and summarization value, but weak standalone recommendation quality in this sample. A Gemini synthesis or final verdict on GOOG should be discounted under the portfolio routing rule. |
+
+### Findings
+
+1. **Price did not scale proportionally with quality.** Anthropic produced the
+   deepest audit, but also made the central error in its own answer. Its cost
+   premium mainly reflects expensive output and repeatedly re-billed search
+   context, not a five- to sixteen-fold improvement in reasoning.
+2. **GPT was the strongest cost-adjusted generalist in this run set.** It had
+   the best initial factual coverage and the most calibrated syntheses, while
+   still benefiting materially from criticism.
+3. **Gemini supplied unusually cheap marginal value.** Its critique changed
+   the debate by finding the headline-P/E failure, even though its own answer
+   was overconfident. This is evidence for debate diversity, not for trusting
+   Gemini's standalone GOOG verdict.
+4. **The Flash judge was useful compression, not new evidence.** Its near-zero
+   visible cost makes the feature attractive, but a non-conflicted judge is
+   required for a portfolio GOOG debate.
+5. **The current evidence supports a budgeting hypothesis, not a lineup
+   decision:** use Fable selectively where exhaustive audit may justify the
+   premium, test Sonnet as the routine Claude binding, and retain GPT/Gemini
+   diversity. The protocol's role rotation means permanent role specialization
+   would require a separate design decision.
+
+### What an objective comparison still requires
+
+Across multiple questions with resolvable answers, annotate atomic claims
+against primary sources and score: material errors caught and introduced,
+source quality, concession correctness, synthesis fidelity, unique changes to
+the final answer, latency, and dollars per useful correction. Rotate or
+randomize role order and compare Fable with Sonnet on identical prompts. Until
+that dataset exists, the conclusions above should guide experiments and token
+budgets, not be treated as a stable model ranking.

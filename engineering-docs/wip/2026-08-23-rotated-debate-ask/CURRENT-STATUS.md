@@ -113,6 +113,13 @@ What shipped:
   token-derived estimates and the transcript/console model-attribution
   discrepancy for the 10:08 Claude leg. The Gemini Flash judge did not appear
   as a separate visible billing line.
+- **Done — transcript cost/quality review (2026-09-01):** the cost-model note
+  now compares each model's answer, critic, and synthesis contributions. In
+  this small, role-confounded sample, GPT had the best full-spectrum value,
+  Gemini supplied cheap but role-dependent adversarial value, and Fable's real
+  audit-depth advantage did not scale with its 5.4x cost over GPT. This is a
+  budgeting hypothesis pending a multi-question, claim-scored evaluation, not
+  a stable model ranking.
 - Keys are exported only in the owner's terminal, not in the container
   profile; owner will set up shared access later. Until then, live runs
   are owner-executed.
@@ -130,7 +137,8 @@ the last-synthesizer; usage metering, model-name reporting, flexible
 started at `docs/rotated-debate.md`; cost model at
 `engineering-docs/design-notes/2026-08-27-cost-model.md`.
 Provider-console actuals were supplied by the owner and reconciled there on
-2026-09-01; no cost-verification reminder remains open.
+2026-09-01; the transcript-based cost/quality review is recorded in the same
+note, and no cost-verification reminder remains open.
 
 Open when resuming, in rough priority order:
 
