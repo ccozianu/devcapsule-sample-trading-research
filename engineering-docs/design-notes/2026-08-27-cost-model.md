@@ -1,9 +1,11 @@
 # Cost model — rotated debates (2026-08-27)
 
-Status: **estimates** from list prices x the `usage:` frontmatter of the
-2026-08-27 live runs (`tests/resources/test-debates/`). Pending owner
-verification against provider consoles — see Verification below. Known
-blind spots make several figures floors, not totals.
+Status: scenario figures are **estimates** from list prices x the `usage:`
+frontmatter of the 2026-08-27 live runs
+(`tests/resources/test-debates/`). The five-run daily totals were reconciled
+against the provider consoles from owner-reported actuals on 2026-09-01; see
+Verification below. Known metering blind spots still make individual-run
+figures floors, not totals.
 
 ## List prices (per 1M tokens, standard tier, 2026-08-27)
 
@@ -79,19 +81,20 @@ Reading the shape:
    could cut the browse multiplier substantially. Not yet wired through
    the LangChain layer.
 
-## Verification (OPEN TASK — owner)
+## Verification (completed 2026-09-01)
 
-**Task:** check the 2026-08-27 usage/billing dashboards for the OpenAI
-and Google API keys. There was no other usage that day, so the daily
-totals cover exactly the five runs above (note: *five*, including the
-10:08 Sonnet-lineup run and the 18:04 last-synthesizer run). Record
-actuals here; the delta vs the predictions above quantifies the
-unmetered items (OpenAI per-search billing, Gemini grounding).
+The owner reported the provider-console totals for 2026-08-27. There was no
+other API usage that day, so these actuals cover exactly the five runs above,
+including the 10:08 run and the 18:04 last-synthesizer run. Amounts are USD.
 
-| Provider | Predicted (tokens only) | Console actual | Delta / notes |
-|---|---|---|---|
-| OpenAI | ~$4.38 | *(pending)* | |
-| Google | ~$1.41 | *(pending)* | |
+| Provider | Predicted | Console actual | Delta / notes |
+|---|---:|---:|---|
+| Anthropic | ~$26.46 | $26.39 | -$0.07. Prediction reconstructs the five scenario rows ($0.19 + $0.64 + $6.17 + $11.42 + $8.04). The console attributed the reported spend to Fable 5, while the 10:08 transcript identifies `claude-sonnet-5`; preserve this provenance discrepancy. |
+| OpenAI | ~$4.38 | $4.88 | +$0.50. The positive delta is consistent with the web-search charges absent from transcript metering, though the console total does not allocate the delta by request. |
+| Google | ~$1.41 | $1.69 | +$0.28. The `gemini-3.7-flash` final-judge use did not appear as a separate billed line; the owner described it as below visible billing precision. The remaining delta may include grounding or other metering omitted from transcript usage. |
+| **Total** | **~$32.25** | **$32.96** | **+$0.71** |
 
-Agents: if this table still says *(pending)* in a later session, remind
-the owner.
+These daily actuals validate the aggregate cost model to about $0.71 (2.2%)
+while confirming that provider-reported transcript metadata is insufficient
+for exact per-run allocation. Do not use the aggregate deltas to invent search
+counts or charges for an individual transcript.
