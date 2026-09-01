@@ -1,7 +1,7 @@
 # Portfolio Context — Requirements And UX Discovery
 
-Status: discovery draft; no requirements or UX proposed below are accepted
-until the owner confirms them.
+Status: discovery draft; accepted items are labeled with their owner decision,
+and everything else remains proposed until confirmed.
 
 ## User Job 1: Reconcile Broker Reality
 
@@ -40,7 +40,7 @@ Markdown.
 - No import or reconciliation command writes a human decision under
   `portfolio/decisions/`.
 
-### Proposed user experience
+### Accepted preview/apply user experience (owner, 2026-09-01)
 
 Recommended repository-local landing place:
 
@@ -118,7 +118,7 @@ portfolio knowledge. It does not duplicate all snapshot rows in frontmatter.
   changes. This prevents one user's acceptance, or acceptance for one remote,
   from silently applying elsewhere.
 
-### Proposed public-remote warning UX
+### Accepted public-remote warning UX (owner, 2026-09-01)
 
 The read-only preview remains available without repeated privacy warnings. At
 `--apply`, if `origin` is detected as public and the checkout has no matching
@@ -147,13 +147,17 @@ classification.
 
 ## Questions Still To Settle
 
-- Should preview/apply be two explicit invocations as proposed, or one
-  interactive invocation with a confirmation prompt?
-- Is the proposed `--acknowledge-public-origin` refusal-and-persist flow the
-  desired warning UX, including warning only at apply rather than preview?
 - When an export lacks a trustworthy timestamp, should `--as-of` be required
   or may the command default to the current time after confirmation?
 - Which reconciliation gaps block apply, and which may remain pending after
   observable broker state is accepted?
 - Does v0 support Fidelity only behind a broker-adapter boundary, or must it
   accept a small broker-neutral normalized schema as well?
+
+## Accepted GIGO Direction (owner, 2026-09-01)
+
+The portfolio data contract must be iterated and accepted before storage or
+implementation design. Parsing a broker CSV successfully is not sufficient:
+the system must preserve what each datum means, where it came from, when it was
+observed, what is unknown, and which relationships are human interpretation.
+The conceptual work continues in `data-contract.md`.

@@ -56,8 +56,14 @@ technical design. Do not implement during this phase.
 First slice opened 2026-09-01: the owner identified broker-export
 reconciliation as the first concrete user journey. A proposed preview/apply UX
 and its capability requirements are recorded in `requirements-and-ux.md`.
-The privacy posture is now accepted; the remaining import interaction is still
-proposed.
+The privacy posture and preview/apply interaction are accepted; reconciliation
+report contents and detailed error behavior remain proposed.
+
+Second slice opened 2026-09-01: the owner accepted the preview/apply and
+public-origin acknowledgement UX and identified the portfolio data contract as
+the next GIGO risk to settle before design. `data-contract.md` now proposes
+authority layers, core identities, provenance/value semantics, and validation
+invariants for review; no storage schema is chosen.
 
 ## Established Inputs
 
@@ -83,14 +89,13 @@ proposed.
   The general product may ingest exact data; when it detects that `origin` is
   public it warns before apply, but the user may persist a local,
   remote-specific acknowledgement to suppress repeats.
-- Awaiting the human: accept or revise the proposed warning interaction:
-  preview without repeated warnings; first apply refuses with a clear privacy
-  message; rerunning with `--acknowledge-public-origin` persists acceptance for
-  the exact normalized origin URL and warns again if it changes.
-- Weighed and unresolved: proposed import UX is
-  `portfolio ingest <csv>` for a non-mutating reconciliation preview followed
-  by `portfolio ingest <csv> --apply`; accepted broker facts and unresolved
-  semantic explanations are reported separately.
+- Accepted (owner, 2026-09-01): preview is non-mutating and warning-free;
+  `--apply` is explicit; the first apply to a detected public origin refuses
+  until `--acknowledge-public-origin` records local, remote-specific consent.
+- Awaiting the human: decide account and analytic-position granularity. The
+  proposal is one repository portfolio with multiple accounts, holdings keyed
+  by account + instrument, and separately authored analytic positions that may
+  group holdings or instruments.
 - Weighed and unresolved: whether the existing ~3,000-token single-file packet
   remains the accepted UX or becomes one generated view among several.
 - Deliberately not preserved: implementation choices before requirements and
@@ -109,12 +114,14 @@ proposed.
 ## Local Document Index
 
 - [Requirements and UX discovery](requirements-and-ux.md)
+- [Portfolio data contract discovery](data-contract.md)
 - [Intake queue instructions](intake/README.md)
 - [Intake disposition log](intake-dispositions.md)
 
 ## Next Resumable Task
 
-Accept or revise the proposed public-origin warning and preview/apply UX, then
-decide timestamp and blocking-error behavior. Return afterward to the
+Settle account, instrument, holding, lot, and analytic-position granularity in
+the data contract. Then decide timestamp semantics, blocking-error behavior,
+and Fidelity-only versus broker-neutral v0 input. Return afterward to the
 human-versus-machine context-view question. Do not derive implementation
 architecture until the requirements and UX decisions are accepted.
