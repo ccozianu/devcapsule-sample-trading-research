@@ -53,6 +53,12 @@ capabilities rather than the existing file schema. Settle, in order:
 Record accepted requirements and unresolved choices before deriving the
 technical design. Do not implement during this phase.
 
+First slice opened 2026-09-01: the owner identified broker-export
+reconciliation as the first concrete user journey. A proposed preview/apply UX
+and its capability requirements are recorded in `requirements-and-ux.md`.
+Nothing in that proposal is accepted yet; the privacy/canonical-reality model
+must be decided first.
+
 ## Established Inputs
 
 - `engineering-docs/session-records/2026-08-22-vision-interview.md`: the
@@ -73,11 +79,15 @@ technical design. Do not implement during this phase.
 
 ## Open Threads
 
-- Awaiting the human: the first interview decision is the primary user job.
-  Specifically, is `portfolio context` mainly a machine packet for the next
-  LLM session, a human dashboard for portfolio review, or one artifact that
-  must serve both equally? This choice drives content density, rendering, and
-  whether separate machine and human views are needed.
+- Awaiting the human: choose whether exact normalized broker state is
+  canonical in a private repository, remains ignored/local while a sanitized
+  public projection is committed, or is deliberately discarded so the system
+  reasons only over representative sanitized data. This determines the source
+  of truth, output paths, and leakage boundary.
+- Weighed and unresolved: proposed import UX is
+  `portfolio ingest <csv>` for a non-mutating reconciliation preview followed
+  by `portfolio ingest <csv> --apply`; accepted broker facts and unresolved
+  semantic explanations are reported separately.
 - Weighed and unresolved: whether the existing ~3,000-token single-file packet
   remains the accepted UX or becomes one generated view among several.
 - Deliberately not preserved: implementation choices before requirements and
@@ -95,12 +105,14 @@ technical design. Do not implement during this phase.
 
 ## Local Document Index
 
+- [Requirements and UX discovery](requirements-and-ux.md)
 - [Intake queue instructions](intake/README.md)
 - [Intake disposition log](intake-dispositions.md)
 
 ## Next Resumable Task
 
-Ask the owner to choose the primary user job for `portfolio context`, capture
-the reasoning and resulting capability requirement, then continue through the
-normal interaction and output UX. Do not derive implementation architecture
-until the requirements and UX decisions are accepted.
+Settle the privacy/canonical-reality posture for broker reconciliation, then
+accept or revise the proposed preview/apply UX and decide timestamp and
+blocking-error behavior. Return afterward to the human-versus-machine context
+view question. Do not derive implementation architecture until the
+requirements and UX decisions are accepted.
