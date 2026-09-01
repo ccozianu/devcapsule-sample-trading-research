@@ -65,6 +65,13 @@ the next GIGO risk to settle before design. `data-contract.md` now proposes
 authority layers, core identities, provenance/value semantics, and validation
 invariants for review; no storage schema is chosen.
 
+Session checkpoint 2026-09-01: the owner provisionally accepted a consolidated
+multi-account portfolio, holdings at account + instrument granularity, and
+analytic positions that may group multiple holdings or instruments. The owner
+also fixed the modeling order: user capabilities first, conceptual model
+second, physical layout last. The conceptual model remains incomplete and no
+storage or file-layout decision has been made.
+
 ## Established Inputs
 
 - `engineering-docs/session-records/2026-08-22-vision-interview.md`: the
@@ -92,10 +99,13 @@ invariants for review; no storage schema is chosen.
 - Accepted (owner, 2026-09-01): preview is non-mutating and warning-free;
   `--apply` is explicit; the first apply to a detected public origin refuses
   until `--acknowledge-public-origin` records local, remote-specific consent.
-- Awaiting the human: decide account and analytic-position granularity. The
-  proposal is one repository portfolio with multiple accounts, holdings keyed
-  by account + instrument, and separately authored analytic positions that may
-  group holdings or instruments.
+- Accepted for the current conceptual model (owner, 2026-09-01): one repository
+  portfolio may consolidate multiple accounts; holdings retain account +
+  instrument identity; separately authored analytic positions may group
+  multiple holdings or instruments. Physical representation remains open.
+- Awaiting the human: inventory the recurring capabilities and user outcomes
+  after broker reconciliation. Use them to validate or reject the remaining
+  proposed data layers before discussing schemas or file layout.
 - Weighed and unresolved: whether the existing ~3,000-token single-file packet
   remains the accepted UX or becomes one generated view among several.
 - Deliberately not preserved: implementation choices before requirements and
@@ -120,8 +130,9 @@ invariants for review; no storage schema is chosen.
 
 ## Next Resumable Task
 
-Settle account, instrument, holding, lot, and analytic-position granularity in
-the data contract. Then decide timestamp semantics, blocking-error behavior,
-and Fidelity-only versus broker-neutral v0 input. Return afterward to the
-human-versus-machine context-view question. Do not derive implementation
-architecture until the requirements and UX decisions are accepted.
+Resume with a capability inventory: what questions the user expects answered,
+what decisions the application should prepare, and what recurring maintenance
+it should perform after reconciliation. Derive the remaining conceptual model
+from those jobs, then return to timestamp semantics, blocking-error behavior,
+and the human-versus-machine context-view question. Physical layout and coding
+remain explicitly premature.

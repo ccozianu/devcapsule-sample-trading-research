@@ -1,7 +1,17 @@
 # Portfolio Data Contract — Discovery
 
-Status: conceptual proposal for owner review; not an accepted schema or
-storage design.
+Status: conceptual discovery; accepted decisions are labeled below. This is
+not yet an accepted complete model, schema, or storage design.
+
+## Accepted Modeling Order (owner, 2026-09-01)
+
+1. Settle what the portfolio functionality should do for its users.
+2. Derive the conceptual information model required by those capabilities.
+3. Only then choose physical layout, serialization, and storage formats.
+
+The current repository paths, Markdown frontmatter, and snapshot CSV are
+evidence and prototypes, not constraints on the unfinished conceptual model.
+No physical layout decision is implied by accepting a concept below.
 
 ## Why This Contract Exists
 
@@ -109,9 +119,10 @@ analytic-position identity should remain the same concept.
 - A generated context packet must disclose snapshot freshness, unresolved
   reconciliation, and material missing knowledge before presenting analysis.
 
-## First Decision: Account And Position Granularity
+## Accepted Account And Position Granularity (owner, 2026-09-01)
 
-Recommended contract:
+Accepted for the current conceptual model, subject to later evidence from the
+capability interview:
 
 - One repository portfolio may contain **multiple brokerage accounts**.
 - The normalized snapshot preserves holdings at **account + instrument**
@@ -125,14 +136,14 @@ This costs more than treating every CSV row as a `POS-nnn`, but it prevents
 account aggregation, option strategies, transfers, and rolls from becoming
 irrecoverably ambiguous later.
 
-## Questions For The Owner
+## Remaining Questions For The Owner
 
-1. Should one repository represent a consolidated portfolio across multiple
-   brokerage accounts, while preserving account membership as recommended?
-2. Should an analytic position be allowed to group multiple instruments (for
-   example an option spread or stock-plus-hedge), or should v0 require one
-   instrument per position and add strategies later?
-3. Is account-level tax treatment (taxable, IRA, margin, etc.) decision-relevant
+1. Is account-level tax treatment (taxable, IRA, margin, etc.) decision-relevant
    context in v0, or merely broker metadata retained for future use?
-4. Do we explicitly defer transaction-history and tax-lot ingestion, treating
+2. Do we explicitly defer transaction-history and tax-lot ingestion, treating
    state transitions as unexplained unless the user supplies confirmation?
+
+Do not answer these from schema convenience. Resume first with a capability
+inventory: the recurring user questions, decisions, reviews, and maintenance
+tasks the application is expected to support. Use that inventory to test every
+proposed entity and field before accepting the rest of this model.
