@@ -24,13 +24,12 @@ and merge `main` into branches that may be shared.
 
 ## Current Task
 
-Complete multiple-stream initialization, preserve the former single-stream
-handoff as durable portfolio context, and route the pre-migration recovery
-state.
+Maintain project-wide sequencing and route newly authorized workstreams.
 
-Status: completed and published. Remote `main` contains the initialized
-multiple-stream structure and the finalized repository-foundation recovery
-through `54e70c9`.
+Latest action: the owner selected the portfolio application as the next
+product focus on 2026-09-01. The `portfolio-context` workstream was opened for
+a requirements-and-UX interview followed by design. Coding is explicitly
+deferred until the owner accepts those artifacts.
 
 ## Carried-Forward Project State
 
@@ -53,8 +52,12 @@ documentation changes. They were routed through the bounded
 ## Coordination Decisions
 
 - The project owner explicitly reprioritized migration to multiple-stream mode
-  ahead of the recorded labeled-fixture slice; that slice remains the leading
-  product priority.
+  ahead of the recorded labeled-fixture slice.
+- On 2026-09-01 the owner confirmed the portfolio sequence as `portfolio
+  context`, then `portfolio debate`, then `sweep`, and directed that the first
+  workstream settle capabilities and UX and derive the design before coding.
+  This supersedes the labeled-fixture slice as the current priority without
+  rejecting or erasing that evaluation work.
 - Initialization creates only this reserved workstream. An ordinary workstream
   for the fixture effort should be opened separately when that work is taken up.
 - The project owner selected `direct-main` as the repository's default delivery
@@ -74,8 +77,14 @@ documentation changes. They were routed through the bounded
 
 ## Prioritized Next Work
 
-1. Open an ordinary workstream for the first human-reviewed labeled fixture
-   set. Capture R-EVAL-002 when fixture scope is chosen.
+1. Complete the design-first `portfolio-context` workstream: settle user
+   capabilities and UX, derive an accepted design, then implement only after
+   the owner authorizes that phase.
+2. After portfolio context, open separate workstreams for `portfolio debate`
+   and then `sweep`; do not mix their unfinished state into the context
+   checkout.
+3. Retain the first human-reviewed labeled fixture set as later evaluation
+   work. Capture R-EVAL-002 when fixture scope is chosen.
    Done means: the harness loads the fixtures and reports at least the
    single-best and flat-majority baselines without live model calls.
    Verification: run the unit suite and a local fixture-evaluation command.
@@ -83,9 +92,9 @@ documentation changes. They were routed through the bounded
 
 ## Open Threads
 
-- Awaiting the human: fixture subject scope, source selection and provenance,
-  and the grading rule; these choices shape R-EVAL-002 and the fixture
-  workstream.
+- Weighed and unresolved: fixture subject scope, source selection, provenance,
+  and grading still shape R-EVAL-002, but the owner sequenced that work behind
+  the portfolio path on 2026-09-01.
 - Deliberately not preserved: conversational chronology before migration; the
   repository records above retain the state needed to resume.
 
@@ -104,6 +113,7 @@ documentation changes. They were routed through the bounded
 
 ## Next Resumable Task
 
-When the project owner is ready to settle fixture subject scope, source and
-provenance, and the grading rule, record those decisions and open the ordinary
-labeled-fixture workstream from current `main`.
+Track the `portfolio-context` design interview and preserve the confirmed
+sequence. When that workstream finishes, route the next bounded effort to
+`portfolio debate`; the labeled-fixture slice remains later work unless the
+owner reprioritizes it.

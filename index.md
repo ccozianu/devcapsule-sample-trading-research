@@ -31,6 +31,7 @@
 - [Project-management workstream status](engineering-docs/wip/2026-08-21-project-management/CURRENT-STATUS.md)
 - [Vision-consolidation workstream status](engineering-docs/wip/2026-08-22-vision-consolidation/CURRENT-STATUS.md)
 - [Rotated-debate-ask workstream status](engineering-docs/wip/2026-08-23-rotated-debate-ask/CURRENT-STATUS.md)
+- [Portfolio-context workstream status](engineering-docs/wip/2026-09-01-portfolio-context/CURRENT-STATUS.md)
 
 ## Other Existing Documentation
 
