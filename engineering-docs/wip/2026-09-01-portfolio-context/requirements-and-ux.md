@@ -104,35 +104,53 @@ One generated Markdown report per accepted import should record:
 This report is the audit bridge between tabular broker facts and authored
 portfolio knowledge. It does not duplicate all snapshot rows in frontmatter.
 
-## Load-Bearing Open Decision: Privacy And Canonical Reality
+## Accepted Privacy Posture (owner, 2026-09-01)
 
-The existing demo policy commits altered quantities and placeholder account
-identifiers. That is safe for a public repository but cannot simultaneously be
-the exact operational truth for position sizing and concentration. Choose one
-product posture before accepting paths or write behavior:
+- This public demo repository operates on test or sanitized data only. Its
+  committed snapshots are not represented as the owner's exact live holdings.
+- The general product may operate on exact broker data. A public Git remote is
+  a privacy risk worth surfacing, but it is not a prohibition: an informed
+  user may accept the risk and suppress repeat warnings.
+- Public/private detection is best-effort. The product must not claim a remote
+  is private merely because public status could not be established.
+- Acceptance is local to the checkout and bound to the normalized `origin`
+  identity. It must not be committed and must become invalid if `origin`
+  changes. This prevents one user's acceptance, or acceptance for one remote,
+  from silently applying elsewhere.
 
-1. **Private-repository posture:** normalized exact snapshots are canonical and
-   commit-eligible because the user controls a private repository. Sanitized
-   demo export is a separate publication operation.
-2. **Public-demo posture:** exact normalized state remains local and ignored;
-   only a stable sanitized projection is committed. Context and debate output
-   must then have explicit private and publishable variants to avoid leaking
-   exact holdings.
-3. **Sanitized-only posture:** the repository intentionally reasons over an
-   altered representative portfolio. This is simplest and safest but cannot
-   claim exact sizing or concentration advice for the owner's real account.
+### Proposed public-remote warning UX
 
-Current recommendation: make exact-state operation a private-repository
-capability and treat sanitization as an explicit publication boundary. For
-this public demo checkout, use local-only exact input/state and commit only the
-sanitized projection. This is more complex than one snapshot, but it does not
-pretend altered data are exact reality.
+The read-only preview remains available without repeated privacy warnings. At
+`--apply`, if `origin` is detected as public and the checkout has no matching
+local acceptance, the command refuses before writing and prints:
+
+```text
+PRIVACY WARNING: Git remote 'origin' appears to be public.
+Applying this import may write holdings, quantities, cost basis, and marks
+into files that can be pushed to that remote.
+
+Review the proposed files above. To accept and remember this risk for this
+exact origin, rerun with --acknowledge-public-origin.
+```
+
+The explicit flag records a local acknowledgement associated with a
+fingerprint of the normalized origin URL. Future applies suppress the warning
+only while that fingerprint still matches. A committed project declaration
+that the repository contains test/sanitized data may suppress the warning for
+this demo, but it must not silently classify an arbitrary user's imported data
+as safe.
+
+Unknown status, no `origin`, unsupported forges, offline detection, and
+multiple-remotes policy remain design questions. The accepted requirement is
+best-effort warning on detected public `origin`, not perfect hosting-provider
+classification.
 
 ## Questions Still To Settle
 
-- Which privacy/canonical-reality posture is the product contract?
 - Should preview/apply be two explicit invocations as proposed, or one
   interactive invocation with a confirmation prompt?
+- Is the proposed `--acknowledge-public-origin` refusal-and-persist flow the
+  desired warning UX, including warning only at apply rather than preview?
 - When an export lacks a trustworthy timestamp, should `--as-of` be required
   or may the command default to the current time after confirmation?
 - Which reconciliation gaps block apply, and which may remain pending after

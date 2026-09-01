@@ -56,8 +56,8 @@ technical design. Do not implement during this phase.
 First slice opened 2026-09-01: the owner identified broker-export
 reconciliation as the first concrete user journey. A proposed preview/apply UX
 and its capability requirements are recorded in `requirements-and-ux.md`.
-Nothing in that proposal is accepted yet; the privacy/canonical-reality model
-must be decided first.
+The privacy posture is now accepted; the remaining import interaction is still
+proposed.
 
 ## Established Inputs
 
@@ -79,11 +79,14 @@ must be decided first.
 
 ## Open Threads
 
-- Awaiting the human: choose whether exact normalized broker state is
-  canonical in a private repository, remains ignored/local while a sanitized
-  public projection is committed, or is deliberately discarded so the system
-  reasons only over representative sanitized data. This determines the source
-  of truth, output paths, and leakage boundary.
+- Accepted (owner, 2026-09-01): this public demo uses test/sanitized data only.
+  The general product may ingest exact data; when it detects that `origin` is
+  public it warns before apply, but the user may persist a local,
+  remote-specific acknowledgement to suppress repeats.
+- Awaiting the human: accept or revise the proposed warning interaction:
+  preview without repeated warnings; first apply refuses with a clear privacy
+  message; rerunning with `--acknowledge-public-origin` persists acceptance for
+  the exact normalized origin URL and warns again if it changes.
 - Weighed and unresolved: proposed import UX is
   `portfolio ingest <csv>` for a non-mutating reconciliation preview followed
   by `portfolio ingest <csv> --apply`; accepted broker facts and unresolved
@@ -111,8 +114,7 @@ must be decided first.
 
 ## Next Resumable Task
 
-Settle the privacy/canonical-reality posture for broker reconciliation, then
-accept or revise the proposed preview/apply UX and decide timestamp and
-blocking-error behavior. Return afterward to the human-versus-machine context
-view question. Do not derive implementation architecture until the
-requirements and UX decisions are accepted.
+Accept or revise the proposed public-origin warning and preview/apply UX, then
+decide timestamp and blocking-error behavior. Return afterward to the
+human-versus-machine context-view question. Do not derive implementation
+architecture until the requirements and UX decisions are accepted.
