@@ -19,3 +19,15 @@ mount = "/workspace/trading-research"
 [host.network.mode.recommended]
 value = "host"
 justification = "Reach host-bound market-data, model, and development services used by the trading-research workflow."
+
+[host.docker.mode.recommended]
+value = "host-socket"
+justification = "It's all good on localhost"
+
+[host.privilege.development-sudo.recommended]
+value = true
+justification = "need 4 debugging"
+
+[host.browser.host-open.recommended]
+value = true
+justification = "need to check URLs"
