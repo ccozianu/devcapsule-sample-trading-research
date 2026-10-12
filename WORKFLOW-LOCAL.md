@@ -1,0 +1,62 @@
+# Local Workflow: DevCapsule Sample: Trading Research
+
+This is the project's own half of the workflow. `WORKFLOW.md` beside it is the
+installed generic definition and binds wherever it speaks; this file governs
+wherever it is silent. The headings below are the topics a project usually
+needs to settle for itself. Fill the ones that apply, delete the ones that do
+not, and add any this project needs that were not foreseen. Bootstrap wrote
+this file once and will not touch it again. See *The Project's Local
+Workflow* in `WORKFLOW.md`.
+
+## Integration Branch
+
+Fill in only if it is not `main`. `WORKFLOW.md` says `main` throughout and
+means the project's integration branch, whatever its name; state the name
+here if it differs, for example `master` or `trunk`.
+
+## Version Scheme
+
+How the source names itself between releases and at a release, and the
+command that sets it. For example: a Python project carries `X.Y.Z.dev0`
+between releases and `X.Y.Z` at the release; a Maven project carries
+`X.Y.Z-SNAPSHOT`. The marker must order before the release in the
+ecosystem's tooling.
+
+## Release Policy
+
+The ref spelling if it differs from `release-<version>` and `v<version>`; how
+a candidate is built and published; what the candidate gate checks and how a
+documented exception is recorded; what acceptance evidence is required; and
+where the acceptance record lives.
+
+## Validation Commands
+
+Required; `devcapsule workflow brief` prints this section at every session
+start. Before the first checkpoint that adds a build, test, start or
+smoke-test step, write here, runnable as written from a named directory:
+
+- **Environment**: what must exist on the machine and how to obtain it.
+- **Unit tests**: the command.
+- **Integration tests**: the command, and what it needs beyond the environment.
+- **End-to-end tests**: the command, what infrastructure it needs, and where
+  its evidence is kept.
+- **Smoke test**: how the software is started and what proves it answers.
+- **Gate**: which of the above run before a checkpoint and before integration.
+
+Say `none` for a kind this project does not have, with the reason. See
+*Validation* in `INFORMATION-MODEL.md` for what each kind means. A step that is not written here does not exist for the next agent.
+
+## Host Capabilities
+
+What the project needs from the machine and the hosting service that the
+generic workflow cannot assume: branch permissions, runners, credentials, and
+the justification for each.
+
+## Exceptions
+
+Every recorded departure from `WORKFLOW.md`, each with its reason and, where
+one exists, the condition that ends it. Empty means none.
+
+For example, a project that integrates by squash merge instead of the
+definition's merge commit records it here, with the consequence: records
+cite pull requests and tags, never branch commits.

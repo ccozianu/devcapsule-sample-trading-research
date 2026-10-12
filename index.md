@@ -6,6 +6,9 @@
 - [Documentation index](index.md)
 - [Agent instructions](AGENTS.md)
 - [Reusable human/agent workflow](WORKFLOW.md)
+- [Project-local workflow](WORKFLOW-LOCAL.md)
+- [Workflow preamble (for humans)](PREAMBLE.md)
+- [Workflow information model (for humans)](INFORMATION-MODEL.md)
 - [Open-workstream registry](CURRENT-STATUS.md)
 - [Requirements register](REQUIREMENTS.md)
 
@@ -29,6 +32,7 @@
 - `engineering-docs/archive/` — concluded multiple-stream workstream state
 - `engineering-docs/session-records/` — explicitly requested session records
 - [Project-management workstream status](engineering-docs/wip/2026-08-21-project-management/CURRENT-STATUS.md)
+- [Maintenance workstream status](engineering-docs/wip/2026-10-12-maintenance/CURRENT-STATUS.md)
 - [Vision-consolidation workstream status](engineering-docs/wip/2026-08-22-vision-consolidation/CURRENT-STATUS.md)
 - [Rotated-debate-ask workstream status](engineering-docs/wip/2026-08-23-rotated-debate-ask/CURRENT-STATUS.md)
 

@@ -31,3 +31,8 @@ justification = "need 4 debugging"
 [host.browser.host-open.recommended]
 value = true
 justification = "need to check URLs"
+
+[workflow]
+definition = "devcapsule"
+version = "0.2.16.dev0"
+mode = "multiple-streams"

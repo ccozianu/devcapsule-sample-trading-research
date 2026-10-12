@@ -1,0 +1,6 @@
+# Intake: `maintenance`
+
+This directory contains work delivered by other workstreams that has not yet
+been decided. Follow `WORKFLOW.md`: each item is acknowledged into this
+workstream's status file or otherwise handled as the protocol permits, and every
+decision is recorded before the item is removed.
