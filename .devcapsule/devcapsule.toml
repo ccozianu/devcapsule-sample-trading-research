@@ -2,7 +2,13 @@ devcapsule-schema-version = 1
 workflow-type = "multiple-streams"
 
 [capabilities]
-need = ["claude-code-agent", "codex-agent", "python", "python-ide"]
+need = [
+    "claude-code-agent",
+    "codex-agent",
+    "antigravity-agent",
+    "python",
+    "python-ide",
+]
 
 [project]
 name = "DevCapsule Sample: Trading Research"
@@ -13,3 +19,20 @@ mount = "/workspace/trading-research"
 [host.network.mode.recommended]
 value = "host"
 justification = "Reach host-bound market-data, model, and development services used by the trading-research workflow."
+
+[host.docker.mode.recommended]
+value = "host-socket"
+justification = "It's all good on localhost"
+
+[host.privilege.development-sudo.recommended]
+value = true
+justification = "need 4 debugging"
+
+[host.browser.host-open.recommended]
+value = true
+justification = "need to check URLs"
+
+[workflow]
+definition = "devcapsule"
+version = "0.2.16.dev0"
+mode = "multiple-streams"
