@@ -35,6 +35,7 @@
 - [Maintenance workstream status](engineering-docs/wip/2026-10-12-maintenance/CURRENT-STATUS.md)
 - [Vision-consolidation workstream status](engineering-docs/wip/2026-08-22-vision-consolidation/CURRENT-STATUS.md)
 - [Rotated-debate-ask workstream status](engineering-docs/wip/2026-08-23-rotated-debate-ask/CURRENT-STATUS.md)
+- [Portfolio-context workstream status](engineering-docs/wip/2026-09-01-portfolio-context/CURRENT-STATUS.md)
 
 ## Other Existing Documentation
 

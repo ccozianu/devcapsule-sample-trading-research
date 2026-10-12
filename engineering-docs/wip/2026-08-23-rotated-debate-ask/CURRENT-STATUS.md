@@ -107,10 +107,19 @@ What shipped:
 - Prompt iteration items from the first transcript: the critic misread
   the true system date as a hallucinated one; consider telling roles the
   run date is authoritative.
-- **OPEN owner task (2026-08-27):** verify the day's OpenAI and Google
-  console spend against
-  `engineering-docs/design-notes/2026-08-27-cost-model.md` and fill in
-  its Verification table (agents remind until done — see that doc).
+- **Done — console-cost verification (owner report, 2026-09-01):** the five
+  2026-08-27 runs cost $26.39 Anthropic, $4.88 OpenAI, and $1.69 Google
+  ($32.96 total). The cost-model reconciliation records deltas against the
+  token-derived estimates and the transcript/console model-attribution
+  discrepancy for the 10:08 Claude leg. The Gemini Flash judge did not appear
+  as a separate visible billing line.
+- **Done — transcript cost/quality review (2026-09-01):** the cost-model note
+  now compares each model's answer, critic, and synthesis contributions. In
+  this small, role-confounded sample, GPT had the best full-spectrum value,
+  Gemini supplied cheap but role-dependent adversarial value, and Fable's real
+  audit-depth advantage did not scale with its 5.4x cost over GPT. This is a
+  budgeting hypothesis pending a multi-question, claim-scored evaluation, not
+  a stable model ranking.
 - Keys are exported only in the owner's terminal, not in the container
   profile; owner will set up shared access later. Until then, live runs
   are owner-executed.
@@ -127,23 +136,23 @@ the last-synthesizer; usage metering, model-name reporting, flexible
 `--add-last-synthesizer` all shipped and validated today. User docs
 started at `docs/rotated-debate.md`; cost model at
 `engineering-docs/design-notes/2026-08-27-cost-model.md`.
+Provider-console actuals were supplied by the owner and reconciled there on
+2026-09-01; the transcript-based cost/quality review is recorded in the same
+note, and no cost-verification reminder remains open.
 
 Open when resuming, in rough priority order:
 
-1. **Owner task (agents: remind):** fill the console-actuals table in
-   the cost-model doc (five runs, 2026-08-27; predictions OpenAI ~$4.38 /
-   Google ~$1.41 tokens-only).
-2. **Open next workstream: `portfolio context`** — the owner-confirmed
+1. **Open next workstream: `portfolio context`** — the owner-confirmed
    order is `portfolio context`, then `portfolio debate`, then `sweep`
    (contract: `engineering-docs/specifications/debate-invocation.md`).
    Start with a design interview on what the context generator
    assembles; the browse/no-browse transcript pair is the OQ-2 evidence
    base for how context and browsing should combine.
-3. Deferred design question: strip browse from rotation synthesizers
+2. Deferred design question: strip browse from rotation synthesizers
    (unrebutted-evidence rationale, recorded above).
-4. Backlog: Gemini/OpenAI search-count metering; Anthropic citation-URL
+3. Backlog: Gemini/OpenAI search-count metering; Anthropic citation-URL
    preservation in `_normalize_content`; prompt iteration (run-date
    authority; rank last-synthesis disputes by materiality); doc/code
    duplication of the alias table (pin with a test if drift bothers us).
-5. Housekeeping: archive the `vision-consolidation` workstream (still
+4. Housekeeping: archive the `vision-consolidation` workstream (still
    marked ready in the registry).

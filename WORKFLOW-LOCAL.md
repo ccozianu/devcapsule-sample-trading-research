@@ -31,20 +31,26 @@ where the acceptance record lives.
 
 ## Validation Commands
 
-Required; `devcapsule workflow brief` prints this section at every session
-start. Before the first checkpoint that adds a build, test, start or
-smoke-test step, write here, runnable as written from a named directory:
+Run all commands from the repository root.
 
-- **Environment**: what must exist on the machine and how to obtain it.
-- **Unit tests**: the command.
-- **Integration tests**: the command, and what it needs beyond the environment.
-- **End-to-end tests**: the command, what infrastructure it needs, and where
-  its evidence is kept.
-- **Smoke test**: how the software is started and what proves it answers.
-- **Gate**: which of the above run before a checkpoint and before integration.
-
-Say `none` for a kind this project does not have, with the reason. See
-*Validation* in `INFORMATION-MODEL.md` for what each kind means. A step that is not written here does not exist for the next agent.
+- **Environment**: Python 3.12 or newer. Create the local environment with
+  `python3.12 -m venv .venv`, then run
+  `.venv/bin/python -m pip install -r dev-requirements.txt`.
+- **Unit tests**: `.venv/bin/nox -s tests`; the suite uses scripted engines
+  and requires no provider keys or live network calls.
+- **Integration tests**: no separate automated integration suite exists.
+- **End-to-end tests**: owner-executed live debates require the `engines`
+  extra (`.venv/bin/python -m pip install '.[engines]'`) and provider keys.
+  Follow `docs/rotated-debate.md`; retained evidence lives in
+  `tests/resources/test-debates/`. These paid runs are not a routine gate.
+- **Smoke test**: `.venv/bin/python -m rotated_debate --help` must exit
+  successfully and list the `ask` command; this checks CLI startup only.
+- **Build**: `.venv/bin/nox -s build` produces the wheel and source archive.
+- **Gate**: `.venv/bin/nox` runs tests, compilation, and lint before code
+  checkpoints and integration. For documentation-only checkpoints, check
+  `git diff --check`, links, and configuration consistency. Run the build
+  when packaging changes; live validation is required for provider behavior
+  that the offline tests cannot establish.
 
 ## Host Capabilities
 
