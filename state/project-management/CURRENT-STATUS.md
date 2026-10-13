@@ -12,7 +12,7 @@ Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@426b1fa5ef12
 
 Branch prefix: `ws-project-management/`
 
-Working branch: `ws-project-management/coordination`, forked from `main` on
+Branch association: `ws-project-management/coordination`, forked from `main` on
 2026-10-13. The pre-adoption branches `project-management/coordination` and
 `project-management/outbox` hold nothing `main` lacks; the outbox was
 retired by definition 0.2.14. Deleting both awaits the owner's direction.
@@ -90,7 +90,7 @@ reorder it.
   R-EVAL-002, sequenced behind the portfolio path on 2026-09-01.
 - Observed, not edited: `devcapsule workflow status` shows an empty branch
   column for `cli-engines`; its status file says `Initial branch:` where the
-  tool reads a branch association line. That workstream's own record to fix.
+  tool reads a `Branch association:` line. That workstream's own record to fix.
 - Deliberately not preserved: conversational chronology before migration.
 
 ## External State And Risks
