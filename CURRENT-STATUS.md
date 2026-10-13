@@ -14,3 +14,4 @@ workstream handoff.
 | `vision-consolidation` | deliverables complete; ready to archive | `vision-consolidation/` | [status](engineering-docs/wip/2026-08-22-vision-consolidation/CURRENT-STATUS.md) |
 | `rotated-debate-ask` | active; feature-complete and live-validated | `rotated-debate/` | [status](engineering-docs/wip/2026-08-23-rotated-debate-ask/CURRENT-STATUS.md) |
 | `portfolio-context` | active; requirements and UX design | `portfolio-context/` | [status](engineering-docs/wip/2026-09-01-portfolio-context/CURRENT-STATUS.md) |
+| `cli-engines` | active; design first, then the first engine: debate engines backed by the `claude`, `codex` and Antigravity command-line clients through ambient sign-in | `ws-cli-engines/` | [status](engineering-docs/wip/2026-10-13-cli-engines/CURRENT-STATUS.md) |
