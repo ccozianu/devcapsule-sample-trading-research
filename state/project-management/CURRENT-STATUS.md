@@ -14,9 +14,10 @@ Branch prefix: `ws-project-management/`
 
 Branch association: `ws-project-management/coordination`
 
-Forked from `main` on 2026-10-13. The pre-adoption branches `project-management/coordination` and
-`project-management/outbox` hold nothing `main` lacks; the outbox was
-retired by definition 0.2.14. Deleting both awaits the owner's direction.
+Forked from `main` on 2026-10-13. The pre-adoption branches
+`project-management/coordination` and `project-management/outbox` hold
+nothing `main` lacks; the outbox was retired by definition 0.2.14. Deleting
+both awaits the owner's direction.
 
 Integration target: `main`
 
