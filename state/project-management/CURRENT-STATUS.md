@@ -12,8 +12,9 @@ Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@426b1fa5ef12
 
 Branch prefix: `ws-project-management/`
 
-Branch association: `ws-project-management/coordination`, forked from `main` on
-2026-10-13. The pre-adoption branches `project-management/coordination` and
+Branch association: `ws-project-management/coordination`
+
+Forked from `main` on 2026-10-13. The pre-adoption branches `project-management/coordination` and
 `project-management/outbox` hold nothing `main` lacks; the outbox was
 retired by definition 0.2.14. Deleting both awaits the owner's direction.
 
