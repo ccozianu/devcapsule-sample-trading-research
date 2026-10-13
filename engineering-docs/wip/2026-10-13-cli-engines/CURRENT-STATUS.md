@@ -11,6 +11,8 @@ the access route changes.
 
 State: `active; design first, then the first engine`
 
+Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@426b1fa5ef12
+
 Branch prefix: `ws-cli-engines/`
 
 Initial branch: `ws-cli-engines/v0`
