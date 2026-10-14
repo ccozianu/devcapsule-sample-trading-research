@@ -15,9 +15,9 @@ Branch prefix: `ws-project-management/`
 Branch association: `ws-project-management/coordination`
 
 Forked from `main` on 2026-10-13. The pre-adoption branches
-`project-management/coordination` and `project-management/outbox` hold
-nothing `main` lacks; the outbox was retired by definition 0.2.14. Deleting
-both awaits the owner's direction.
+`project-management/coordination` and `project-management/outbox` held
+nothing `main` lacks (verified by patch identity) and were deleted on the
+owner's direction on 2026-10-14; the outbox was retired by definition 0.2.14.
 
 Integration target: `main`
 
@@ -65,7 +65,7 @@ reorder it.
   reserved `maintenance` workstream.
 - 2026-10-13: the owner opened `cli-engines` as an ordinary workstream.
   This workstream's first working branch takes the `ws-` form; the
-  pre-adoption branches are left in place until the owner directs deletion.
+  pre-adoption branches were deleted on the owner's direction, 2026-10-14.
 - 2026-10-13: the DevCapsule process record was assigned onward to
   `cli-engines`; see the decision log.
 
@@ -86,8 +86,7 @@ reorder it.
 
 ## Open Threads
 
-- Awaiting the human: the delivery decision above, and whether to delete
-  the drained pre-adoption branches.
+- Awaiting the human: the delivery decision above.
 - Weighed and unresolved: fixture subject scope and grading still shape
   R-EVAL-002, sequenced behind the portfolio path on 2026-09-01.
 - Observed, not edited: `devcapsule workflow status` shows an empty branch
