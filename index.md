@@ -28,6 +28,7 @@
 - `engineering-docs/design-notes/` — exploratory design work
 - `engineering-docs/implementation-notes/` — implementation plans and evidence
 - `engineering-docs/bugs/` — reproducible defects and close criteria
+- `engineering-docs/work-orders/` — scoped hand-overs to a workstream with finish criteria
 - `engineering-docs/wip/` — active multiple-stream workstream state
 - `engineering-docs/archive/` — concluded multiple-stream workstream state
 - `engineering-docs/session-records/` — explicitly requested session records
@@ -37,6 +38,7 @@
 - [Rotated-debate-ask workstream status](engineering-docs/wip/2026-08-23-rotated-debate-ask/CURRENT-STATUS.md)
 - [Portfolio-context workstream status](engineering-docs/wip/2026-09-01-portfolio-context/CURRENT-STATUS.md)
 - [CLI-engines workstream status](engineering-docs/wip/2026-10-13-cli-engines/CURRENT-STATUS.md)
+- [Work order: cli-engines slice 1, the claude client](engineering-docs/work-orders/2026-10-14-cli-engines-slice-1-claude-client.md)
 
 ## Other Existing Documentation
 

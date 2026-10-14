@@ -115,7 +115,9 @@ are under *Open Questions*. The facts found so far:
   providers are touched, and `resolve_model_id` is the alias resolution the
   specification binds.
 
-Next resumable task: slice 1. In `engines.py`, recognize a `cli-<model>`
+Next resumable task: slice 1, scoped in the
+[work order of 2026-10-14](../../work-orders/2026-10-14-cli-engines-slice-1-claude-client.md).
+In short: in `engines.py`, recognize a `cli-<model>`
 item, infer the vendor from the model name, build a `ChatFn` that runs the
 vendor's client as a chat engine (for `claude`: `-p`, JSON output, the
 engine prompt as the whole system prompt, no tools, no session
@@ -171,8 +173,8 @@ that were rejected so they are not re-proposed.
 
 ## Open Threads
 
-- Awaiting the human: the go-ahead to start slice 1, and the choice of the
-  reviewer pair's client for its first pull request.
+- Awaiting the human: the go-ahead to start slice 1 under its work order;
+  the reviewer pair runs on `codex` unless the owner says otherwise.
 - Weighed and unresolved: nothing; the six questions are decided above.
 - Deliberately not preserved: the chat in which the questions were asked.
 
@@ -184,6 +186,8 @@ that were rejected so they are not re-proposed.
   chosen.
 
 - `intake/`: empty; `intake-dispositions.md` holds the decision log.
+- [Work order: slice 1, the `claude` client](../../work-orders/2026-10-14-cli-engines-slice-1-claude-client.md),
+  the scope and finish criteria of the next task; open until merged.
 - The access-route decision this extends:
   [LangChain as the engine access layer](../../decisions/engineering/2026-08-23-langchain-engine-access.md).
 - The binding contract:
