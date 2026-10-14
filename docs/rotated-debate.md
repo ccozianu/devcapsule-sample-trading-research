@@ -92,8 +92,9 @@ Each item can be, in order of resolution priority:
    client to sign in to. The client is called as a plain chat engine: the
    role prompt as its whole system prompt, no built-in tools, no MCP
    servers, no saved session, in an empty working directory, with
-   `ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN` removed from its
-   environment so an exported key cannot take over the billing. Managed
+   `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, and
+   `ANTHROPIC_CUSTOM_HEADERS` removed from its environment to block direct
+   key/token variables and credentials in custom request headers. Managed
    organization settings, if your client has any, still apply. `--browse`
    and `--temperature` are not available on this route and refuse, naming
    the engine. Routes mix freely:
