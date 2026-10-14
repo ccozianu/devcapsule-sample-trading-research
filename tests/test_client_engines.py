@@ -14,6 +14,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from rotated_debate import clients
 from rotated_debate.cli import main
@@ -134,6 +135,24 @@ class GrammarTests(unittest.TestCase):
 
 
 class RefusalTests(FakeClientMixin, unittest.TestCase):
+    def test_explicit_temperature_is_refused_before_any_call(self) -> None:
+        for temperature in (0.0, 0.5):
+            with self.subTest(temperature=temperature):
+                with self.assertRaisesRegex(SystemExit, "--temperature.*cli-claude"):
+                    build_chat_fn("cli-claude:claude-fable-5-1", temperature)
+        self.assertEqual(self.calls(), [])
+
+    def test_last_synthesizer_temperature_refuses_before_debate(self) -> None:
+        with (
+            patch("rotated_debate.engines.build_engines", return_value={}),
+            patch("rotated_debate.protocol.run_debate") as debate,
+            self.assertRaisesRegex(SystemExit, "--temperature"),
+        ):
+            main(["ask", "q", "--temperature", "0",
+                  "--add-last-synthesizer", "cli-claude-fable-5-1"])
+        debate.assert_not_called()
+        self.assertEqual(self.calls(), [])
+
     def test_auth_process_failures_are_actionable_refusals(self) -> None:
         for error, expected in (
             (subprocess.TimeoutExpired(["claude", "auth", "status"], 60), "60s"),
