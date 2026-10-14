@@ -81,6 +81,21 @@ are under *Open Questions*. The facts found so far:
 - `codex exec` runs one turn and exits; `-m` pins the model; `--json`
   streams events including token usage; `-o` writes the last message to a
   file.
+- Probed 2026-10-14 with one trivial prompt each, from the DevCapsule
+  capsule. `claude -p --output-format json --model claude-fable-5-1
+  --no-session-persistence --system-prompt "<engine prompt>" --tools ""`
+  returns `result`, `usage` (input, output, cache tokens,
+  `server_tool_use`), `modelUsage` with `costUSD`, and `num_turns`; with
+  its own system prompt replaced and no tools the call is 408 input tokens
+  for 4 output tokens. Without that, the client's own agent prompt costs
+  about 20,000 cached tokens per call. `--bare` disables the sign-in and
+  is not usable. `codex exec --json --ephemeral --skip-git-repo-check -m
+  gpt-6-astra` streams `thread.started`, `turn.started`,
+  `item.completed` with the `agent_message` text, and `turn.completed`
+  with usage (input, cached input, output, reasoning tokens); its own
+  instructions cost about 14,000 input tokens per call and cannot be
+  replaced from the command line. Outside a git repository the check must
+  be skipped; inside a trusted one it runs as is.
 - The protocol's engine contract is `ChatFn`, a function from the message
   list to a string; `build_engines` in `engines.py` is the only place
   providers are touched, and `resolve_model_id` is the alias resolution the
