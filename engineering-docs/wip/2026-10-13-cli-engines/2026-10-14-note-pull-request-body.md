@@ -3,7 +3,7 @@
 The GitHub CLI is not installed in the capsule and no token is present, so
 the owner opens the pull request from the pushed branch. This is the body
 to paste, kept here so the record survives the pull request's lifetime.
-Counts marked `[final]` are filled in after review round 2.
+Counts were filled in after review round 2.
 
 ---
 
@@ -56,7 +56,9 @@ Decisions: `engineering-docs/wip/2026-10-13-cli-engines/CURRENT-STATUS.md`,
    client's dollar estimate is recorded as reported.
 4. The client runs in an empty temporary directory with
    `--strict-mcp-config`, and with `ANTHROPIC_API_KEY` and
-   `ANTHROPIC_AUTH_TOKEN` removed from its environment. Measured: the same
+   `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_CUSTOM_HEADERS` and the cloud route
+   selectors removed from its environment, and the client's own sign-in
+   report must say claude.ai, first party. Measured: the same
    prompt costs 805 input tokens from this repository and 417 from an
    empty directory. Managed organization settings are outside reach and
    the guide says so.
@@ -74,11 +76,15 @@ failures, temperature refusal, cost wording), four resolved by the
 implementor (key scrub, working-directory isolation, override rule,
 recorded fixtures), one noted. Assessment:
 `engineering-docs/wip/2026-10-13-cli-engines/2026-10-14-record-review-round-1.md`.
-Round 2: `[final]`.
+Round 2, confined to those resolutions: four verified, one further scrub
+merged from the reviewer (`ANTHROPIC_CUSTOM_HEADERS`), two proposals taken
+(sign-in method check, `TMPDIR` guard), the rest documented limits:
+`engineering-docs/wip/2026-10-13-cli-engines/2026-10-14-record-review-round-2.md`.
+Two rounds of the three allowed.
 
 ## Validation
 
-- Gate `.venv/bin/nox`: `[final]` tests (43 before this slice), compile
+- Gate `.venv/bin/nox`: 74 tests (43 before this slice), compile
   and lint clean, offline, no keys, no sign-in.
 - Smoke: `python -m rotated_debate --help` lists `ask`.
 - Refusals against the real environment, no model call: `--browse`, the
