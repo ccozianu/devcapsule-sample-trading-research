@@ -155,6 +155,10 @@ that were rejected so they are not re-proposed.
 
 ## Workstream Document Index
 
+- [Design: intent resolution](2026-10-14-design-intent-resolution.md),
+  the proposal of 2026-10-14 that replaces the six mechanism questions with
+  a lineup plus an access policy; open until the owner decides.
+
 - `intake/`: empty; `intake-dispositions.md` holds the decision log.
 - The access-route decision this extends:
   [LangChain as the engine access layer](../../decisions/engineering/2026-08-23-langchain-engine-access.md).
