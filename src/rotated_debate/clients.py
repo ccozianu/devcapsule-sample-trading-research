@@ -104,13 +104,25 @@ def check_available(model_id: str, run: Runner = subprocess.run) -> None:
 
 
 def _check_claude_signed_in(executable: str, run: Runner) -> None:
-    completed = run(
-        [executable, "auth", "status"],
-        capture_output=True,
-        text=True,
-        timeout=60,
-        check=False,
-    )
+    try:
+        completed = run(
+            [executable, "auth", "status"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=60,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise SystemExit(
+            "the 'claude' client sign-in check did not finish within 60s; "
+            "check `claude auth status` and rerun"
+        ) from exc
+    except OSError as exc:
+        raise SystemExit(
+            f"could not run the 'claude' client sign-in check: {exc}; "
+            "check the client installation and rerun"
+        ) from exc
     status: Mapping[str, object] = {}
     try:
         parsed = json.loads(completed.stdout or "{}")
@@ -190,7 +202,7 @@ def _parse_claude_result(label: str, stdout: str) -> tuple[str, Mapping[str, obj
 
 def claude_usage(report: Mapping[str, object]) -> dict[str, object]:
     """What the client reports, as it reports it: the token fields of `usage`,
-    the call's dollar cost under the subscription, and the turn count. Nested
+    the client's reported dollar estimate, and the turn count. Nested
     details are left to `record_server_tool_use`; nothing is normalized."""
     usage: dict[str, object] = {}
     reported = report.get("usage")
@@ -225,6 +237,7 @@ def build_client_chat_fn(
                 input=prompt,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
                 timeout=timeout,
                 check=False,
             )

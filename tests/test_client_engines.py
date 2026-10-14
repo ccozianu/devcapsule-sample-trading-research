@@ -10,9 +10,11 @@ import json
 import os
 import stat
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from rotated_debate import clients
 from rotated_debate.cli import main
@@ -29,6 +31,8 @@ from rotated_debate.engines import (
 FAKE_CLAUDE = r'''#!/usr/bin/env python3
 """Fake `claude`: records its argv, answers like the real client."""
 import json, os, sys
+sys.stdin.reconfigure(encoding="utf-8")
+sys.stdout.reconfigure(encoding="utf-8")
 log = os.environ.get("FAKE_CLAUDE_LOG")
 if log:
     with open(log, "a", encoding="utf-8") as fh:
@@ -49,7 +53,7 @@ print(json.dumps({
               "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0,
               "server_tool_use": {"web_search_requests": 0, "web_fetch_requests": 0},
               "service_tier": "standard"},
-}))
+}, ensure_ascii=False))
 '''
 
 ENGINE_REPLY = (
@@ -131,6 +135,39 @@ class GrammarTests(unittest.TestCase):
 
 
 class RefusalTests(FakeClientMixin, unittest.TestCase):
+    def test_explicit_temperature_is_refused_before_any_call(self) -> None:
+        for temperature in (0.0, 0.5):
+            with self.subTest(temperature=temperature):
+                with self.assertRaisesRegex(SystemExit, "--temperature.*cli-claude"):
+                    build_chat_fn("cli-claude:claude-fable-5-1", temperature)
+        self.assertEqual(self.calls(), [])
+
+    def test_last_synthesizer_temperature_refuses_before_debate(self) -> None:
+        with (
+            patch("rotated_debate.engines.build_engines", return_value={}),
+            patch("rotated_debate.protocol.run_debate") as debate,
+            self.assertRaisesRegex(SystemExit, "--temperature"),
+        ):
+            main(["ask", "q", "--temperature", "0",
+                  "--add-last-synthesizer", "cli-claude-fable-5-1"])
+        debate.assert_not_called()
+        self.assertEqual(self.calls(), [])
+
+    def test_auth_process_failures_are_actionable_refusals(self) -> None:
+        for error, expected in (
+            (subprocess.TimeoutExpired(["claude", "auth", "status"], 60), "60s"),
+            (OSError("cannot execute"), "installation"),
+        ):
+            with self.subTest(error=error):
+                def fail(command, error=error, **kwargs):
+                    raise error
+
+                with self.assertRaises(SystemExit) as ctx:
+                    clients.check_available("cli-claude:claude-fable-5-1", run=fail)
+                self.assertIn("claude", str(ctx.exception))
+                self.assertIn(expected, str(ctx.exception))
+        self.assertEqual(self.calls(), [])
+
     def test_browse_is_refused_before_any_call_naming_the_engines(self) -> None:
         specs = parse_engine_args("cli-claude-fable-5-1,gemini,chatgpt")
         with self.assertRaises(SystemExit) as ctx:
@@ -164,6 +201,25 @@ class RefusalTests(FakeClientMixin, unittest.TestCase):
 
 
 class ClaudeCallTests(FakeClientMixin, unittest.TestCase):
+    def test_unicode_round_trip_in_an_ascii_locale(self) -> None:
+        os.environ["FAKE_CLAUDE_REPLY"] = "Réponse: 水"
+        code = r'''
+import os
+from rotated_debate.engines import build_chat_fn
+# The fake, like the real Node client, uses UTF-8 independent of our locale.
+os.environ["PYTHONUTF8"] = "1"
+chat = build_chat_fn("cli-claude:claude-fable-5-1", None, label="x")
+assert chat([("system", "s"), ("user", "caf\u00e9 \u6c34")]) == "R\u00e9ponse: \u6c34"
+'''
+        completed = subprocess.run(
+            [sys.executable, "-c", code],
+            env={**os.environ, "LC_ALL": "C", "PYTHONUTF8": "0",
+                 "PYTHONCOERCECLOCALE": "0"},
+            capture_output=True, encoding="utf-8", check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(self.calls()[-1]["stdin"], "café 水")
+
     def test_command_line_and_prompt_routing(self) -> None:
         chat = build_chat_fn("cli-claude:claude-fable-5-1", None, label="cli-claude-fable-5-1")
         reply = chat([("system", "You are the ANSWERER."), ("user", "Question: why?")])

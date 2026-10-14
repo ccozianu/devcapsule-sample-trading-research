@@ -111,7 +111,7 @@ so the same model by API and by client in one debate stay distinct.
 | `--rotations N` | 3 | Role-assignment triples to run. With 3 engines, 3 = every engine plays every role once (balanced); 6 = all permutations. |
 | `--rounds N` | 1 | Critique→rebuttal exchanges per rotation before synthesis. |
 | `--browse` | off | Give every engine its vendor's server-side web-search tool (Anthropic web search, OpenAI web search via the Responses API, Google Search grounding). Search runs on the provider's servers and is billed per search, on top of tokens; Anthropic searches are capped at 5 per call. Only works for providers with a known browse tool (currently the three above) — others error, and `cli-` engines refuse it for now. |
-| `--temperature T` | provider default | Only sent when set. Current Anthropic and OpenAI models reject an explicit temperature — leave unset unless you know the model accepts it. |
+| `--temperature T` | provider default | Only sent when set. Current Anthropic and OpenAI models reject an explicit temperature — leave unset unless you know the model accepts it. Client engines refuse this flag, including a client used as the last synthesizer; omit it to use the client's default. |
 | `--add-last-synthesizer MODEL` | off | Add a final synthesis over the rotation syntheses, produced by `MODEL` (any form `--engines` items accept, e.g. `gemini-3.7-flash`). The last synthesizer is a judge of the record, not a participant: it **never browses**, is instructed to use only the text at hand, and reports agreement/disagreement on facts and on reasoning separately. Its verdict is recorded alongside the others in `outcome_state` — it does not change the reported `state=` line. |
 | `--out FILE` | `debate-<timestamp>.md` | Transcript path. The only file the command writes. |
 
@@ -126,9 +126,10 @@ rotation's full exchange and synthesis. Frontmatter worth knowing:
   (token counts for all current bindings) plus a `calls` counter, and —
   on browsing runs, where the provider reports it — server-side search
   counts (e.g. `web_search_requests`). A client engine adds what its
-  client reports: for `claude`, `total_cost_usd` as the client prices the
-  calls under the subscription, and `num_turns`. This is where you read
-  what a debate cost.
+  client reports: for `claude`, `total_cost_usd` and `num_turns`.
+  The dollar value is the client's reported estimate, not a measurement of
+  subscription charges or remaining plan allowance. See
+  [Claude Code's cost documentation](https://code.claude.com/docs/en/costs).
 - `outcome_state` — reserves `deterministic_tally` (future) alongside the
   `synthesizer_meta` verdict aggregation and, when
   `--add-last-synthesizer` was used, the `last_synthesizer_verdict` with

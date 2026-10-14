@@ -210,6 +210,11 @@ def build_chat_fn(
                 f"--browse is not available through command-line clients yet "
                 f"({sink_label}); drop --browse or use the API route for it"
             )
+        if temperature is not None:
+            raise SystemExit(
+                f"--temperature is not supported through command-line clients "
+                f"({sink_label}); omit it to use the client's default"
+            )
         clients.check_available(model_id)
         return clients.build_client_chat_fn(model_id, usage_sink, sink_label)
     try:
