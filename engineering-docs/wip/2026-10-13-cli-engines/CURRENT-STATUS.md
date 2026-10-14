@@ -9,7 +9,7 @@ models reached through API keys. The debate protocol, the transcript and
 the reported state stay as the invocation specification defines them; only
 the access route changes.
 
-State: `active; slice 1 implemented, in review`
+State: `active; slice 1 in review, round 2`
 
 Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@426b1fa5ef12
 
@@ -96,14 +96,23 @@ Judgments taken, for the owner's review in the pull request:
 - The prompt travels on stdin; the system prompt on the command line.
   `--setting-sources ""` keeps the repository's own agent configuration
   out of the engine; `--tools ""` leaves it no tools.
-- No environment override for `cli-` items: hyphens make the variable
-  name unusable, and the typed name is the pin.
+- A handle's environment override keeps its documented precedence over a
+  `cli-` binding, and an override in the `cli-` form resolves like any
+  `cli-` item; a bare `cli-` item has no usable variable name.
+- The client's environment loses `ANTHROPIC_API_KEY` and
+  `ANTHROPIC_AUTH_TOKEN`, and the call runs in an empty temporary directory
+  with `--strict-mcp-config`, so neither an exported key nor this
+  repository's agent configuration reaches the engine. Managed
+  organization settings are outside these flags' reach; documented.
 
-Review round 1 in progress: the reviewer pair runs `codex` on
-`gpt-6-astra` in its own worktree on `ws-cli-engines/v0-review`, from the
-brief the implementor wrote. Codex's own sandbox needs Linux user
-namespaces the capsule does not grant (`bwrap` fails), so it runs with its
-sandbox bypassed; the capsule is the sandbox.
+Review round 1 done 2026-10-14, merged as `3c4d186`, resolved in the
+commit after it; see the
+[round-1 record](2026-10-14-record-review-round-1.md): nine findings,
+four fixes merged from the reviewer, four resolved by the implementor (key
+variables scrubbed from the client's environment, client run in an empty
+directory with MCP off, override rule stated, fixtures recorded), one
+noted. Gate after the round: 71 tests, compile and lint clean. Round 2 asks
+the reviewer to verify those resolutions only.
 
 Pull request: the GitHub CLI is not installed in the capsule and no token
 is present, so the pull request against `main` is opened by the owner
@@ -160,10 +169,10 @@ are under *Open Questions*. The facts found so far:
   providers are touched, and `resolve_model_id` is the alias resolution the
   specification binds.
 
-Next resumable task: finish review round 1 (read the reviewer's diff,
-assess, merge or push back, at most three rounds), rerun the gate on the
-merged branch, hand the pull request to the owner with the counts; then
-the owner's mixed-route acceptance run. The original scope, for the
+Next resumable task: review round 2, confined to the round-1
+resolutions; assess, merge or push back; rerun the gate on the merged
+branch; hand the pull request to the owner with the counts; then the
+owner's mixed-route acceptance run. The original scope, for the
 record: in `engines.py`, recognize a `cli-<model>`
 item, infer the vendor from the model name, build a `ChatFn` that runs the
 vendor's client as a chat engine (for `claude`: `-p`, JSON output, the
@@ -235,7 +244,10 @@ that were rejected so they are not re-proposed.
 
 - `intake/`: empty; `intake-dispositions.md` holds the decision log.
 - [Work order: slice 1, the `claude` client](../../work-orders/2026-10-14-cli-engines-slice-1-claude-client.md),
-  the scope and finish criteria of the next task; open until merged.
+  the scope and finish criteria of the current task; open until merged.
+- [Record: review round 1](2026-10-14-record-review-round-1.md), the
+  implementor's assessment of every finding and what was merged; read
+  when a finding is reopened.
 - The access-route decision this extends:
   [LangChain as the engine access layer](../../decisions/engineering/2026-08-23-langchain-engine-access.md).
 - The binding contract:
