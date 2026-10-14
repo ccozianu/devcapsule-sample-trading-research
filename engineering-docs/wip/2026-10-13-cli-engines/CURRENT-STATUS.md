@@ -15,20 +15,22 @@ Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@426b1fa5ef12
 
 Branch prefix: `ws-cli-engines/`
 
-Initial branch: `ws-cli-engines/v0`
+Branch association: `ws-cli-engines/v0`
 
 Integration target: `main`
 
-Delivery method: `direct-main` under the project-wide owner decision
-recorded in the project-management handoff: rebase the clean branch onto
-current `main`, validate, fast-forward local `main`, push normally. Never
-force-push `main`; stop for semantic conflicts or genuine divergence. The
-owner may instead ask for pull requests reviewed by a second agent pair, the
-scheme described in the intake item `project-management` received on
-2026-10-12 from the DevCapsule repository.
+Delivery method: `pull-request`, reviewed by a second agent pair and merged
+by the owner as a merge commit, by the project-wide owner decision of
+2026-10-14 recorded by `project-management` under *Delivery And Review* in
+`WORKFLOW-LOCAL.md` (on its branch until its first integration). Never
+force-push `main`; stop for semantic conflicts or genuine divergence.
 
 Branch synchronization: fork from current `main`; rebase while unpublished
 and merge `main` in once the branch is shared.
+
+Custody: opened 2026-10-13 in a worktree checkout since removed; continued
+2026-10-14 in the main checkout on the owner's direction, with the claim
+taken over.
 
 ## Brief from the owner, 2026-10-13
 
@@ -96,6 +98,15 @@ are under *Open Questions*. The facts found so far:
   instructions cost about 14,000 input tokens per call and cannot be
   replaced from the command line. Outside a git repository the check must
   be skipped; inside a trusted one it runs as is.
+- Verified 2026-10-14 on this project's own capsule: `claude` 2.1.261
+  signed in through claude.ai, `codex` 0.153.4 signed in through ChatGPT,
+  `antigravity` 1.1.24 signed in. Antigravity has a print mode:
+  `--print` with `--output-format json`, `--model`, `--json-schema`,
+  `--sandbox` and a `--print-timeout` (default five minutes). It is a
+  multi-vendor router, not a Gemini client: `antigravity models` lists
+  Gemini 3.8 Flash, Claude Opus 5.5, Claude Sonnet 5.5 and GPT-OSS 120B,
+  each at low, medium and high effort, and no Gemini Pro. Its usage report
+  in print mode is still unprobed.
 - The protocol's engine contract is `ChatFn`, a function from the message
   list to a string; `build_engines` in `engines.py` is the only place
   providers are touched, and `resolve_model_id` is the alias resolution the
@@ -106,12 +117,25 @@ slice, a `claude`-backed engine with pinned model, usage accounting and the
 sign-in check, with tests that run a fake client script and never the real
 one.
 
+## Decisions, 2026-10-14
+
+Taken by the owner one question at a time; each entry names the options
+that were rejected so they are not re-proposed.
+
+1. **Invocation form: client prefixes plus client aliases.** In the
+   existing grammar, `name=cli-claude:MODEL`, `name=cli-codex:MODEL` and
+   `name=cli-antigravity:MODEL` are intercepted before LangChain, and three
+   curated aliases named after the client products, `claude-code`, `codex`
+   and `antigravity`, are pinned in `DEFAULT_MODELS` like the vendor
+   aliases. The default lineup stays the API route; routes mix freely in
+   one debate. Rejected: a whole-debate `--route cli` flag, because it
+   forbids mixed debates and guesses a vendor for Antigravity; a per-engine
+   `@cli` suffix, because it adds a second separator and the same guess.
+6. **Delivery: reviewed pull requests**, settled project-wide; see the
+   delivery method above.
+
 ## Open Questions, for the owner
 
-1. The invocation form. A new provider prefix in the existing grammar,
-   `cli-claude:<model>`, `cli-codex:<model>`, `cli-antigravity:<model>`,
-   keeps `--engines` and the alias rules unchanged. The alternative is a
-   separate flag naming the route. The prefix is recommended.
 2. The pinned models. The specification pins the model behind a vendor
    alias in code. For a client the model is what `--model` or `-m` selects;
    the clients' own defaults are not auditable. Pin them in code as today,
@@ -128,9 +152,6 @@ one.
    report are unverified here, since the client is absent on this capsule.
    Take it as the third slice, after `claude` and `codex`, verified in this
    project's own capsule?
-6. Delivery. Direct to main as this project does today, or stacked pull
-   requests with a second agent pair's review as in the DevCapsule
-   repository?
 
 ## Workstream Document Index
 
