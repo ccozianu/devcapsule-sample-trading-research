@@ -52,6 +52,44 @@ Run all commands from the repository root.
   when packaging changes; live validation is required for provider behavior
   that the offline tests cannot establish.
 
+## Delivery And Review
+
+Owner decision of 2026-10-14, recorded by `project-management`. The
+definition's default, pull-request delivery with a merge commit, applies to
+every workstream; the earlier `direct-main` default of 2026-08-21 is
+withdrawn. What the definition leaves open, who reviews and how, is settled
+here:
+
+- **Two agent pairs per slice.** An implementor pair builds one slice on
+  the workstream branch and opens its pull request, PRn, against `main`; a
+  further slice stacks on the first branch. The pull-request body carries
+  what changed, the judgments taken for the owner's review, and the
+  validation run with counts and limits.
+- **The reviewer gets a written brief.** The implementor writes it: the
+  goal, what to read first and in which order, what the change does, what
+  to look for, what not to widen, the validation commands verbatim, the
+  commit authorship rule, the delivery commands. The reviewer runs in its
+  own checkout with its own environment and never touches the
+  implementor's.
+- **The review is a pull request against the slice.** PRn.1 is a branch off
+  PRn's branch with small commits, and a body with findings grouped by
+  kind, the validation it ran with counts, and proposals it did not
+  implement. The reviewer runs the gate itself and reports what it could
+  not run.
+- **The implementor reads the diff**, not only the summary, posts an
+  assessment comment on the pull request labeled by pair, and merges PRn.1
+  into PRn's branch or pushes back with a new brief. At most three rounds
+  per pull request; then the owner is asked. Accepting without a round and
+  pushing back are both decisions with reasons, both recorded.
+- **Only the owner merges to `main`**, as a merge commit, after the
+  implementor has run the full gate on the merged branch and recorded the
+  counts in the pull request.
+- **Stacked branches are kept consistent by merge commits**, never by
+  rebasing a published base.
+
+Records travel as the definition says: status file and decision log inside
+the slice's pull request, never in one of their own.
+
 ## Host Capabilities
 
 What the project needs from the machine and the hosting service that the
