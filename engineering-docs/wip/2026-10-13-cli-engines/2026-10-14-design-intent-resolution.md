@@ -1,7 +1,9 @@
 # Design: the user states intent, the program resolves the mechanism
 
-Status: proposal, 2026-10-14, for the owner's decision. Supersedes
-decision 1 of the status file if accepted.
+Status: rejected by the owner on 2026-10-14, the day it was written, in
+favor of the simpler `cli-<full model name>` form recorded as decision 1 in
+the status file: an access policy and per-mechanism pins made the user
+configure a mechanism. Kept for the reasoning; nothing below is current.
 
 ## The problem with the first framing
 

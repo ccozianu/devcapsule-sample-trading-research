@@ -122,25 +122,34 @@ one.
 Taken by the owner one question at a time; each entry names the options
 that were rejected so they are not re-proposed.
 
-1. **Invocation form: client prefixes plus client aliases.** In the
-   existing grammar, `name=cli-claude:MODEL`, `name=cli-codex:MODEL` and
-   `name=cli-antigravity:MODEL` are intercepted before LangChain, and three
-   curated aliases named after the client products, `claude-code`, `codex`
-   and `antigravity`, are pinned in `DEFAULT_MODELS` like the vendor
-   aliases. The default lineup stays the API route; routes mix freely in
-   one debate. Rejected: a whole-debate `--route cli` flag, because it
-   forbids mixed debates and guesses a vendor for Antigravity; a per-engine
-   `@cli` suffix, because it adds a second separator and the same guess.
+1. **Invocation form: `cli-<full model name>`.** An `--engines` item
+   `cli-XXXX` means the model `XXXX`, by its vendor's full name, reached
+   through that vendor's default command-line client: `cli-claude-fable-5-1`
+   through `claude`, `cli-gpt-6-astra` through `codex`,
+   `cli-gemini-3.8-flash-high` through `antigravity`. The vendor is
+   inferred from the name's shape by the same patterns bare names use
+   today; the client per vendor is a one-line table. No client aliases and
+   no client pins: the user types the real model id, which the clients can
+   list, and the transcript records it. The API route and its curated
+   aliases are unchanged, and routes mix freely in one debate. Reporting
+   label for a client engine is the item as typed, so the same model by
+   API and by client in one debate stay distinct. Deferred, much later:
+   reaching a model through a different client or endpoint than its
+   vendor's default, such as a Claude model through Antigravity or a
+   private deployment.
+   Superseded on the same day: the client-prefix-plus-aliases form and
+   the intent-resolution proposal
+   ([design](2026-10-14-design-intent-resolution.md)), both rejected by the
+   owner as making the user name or configure a mechanism. Also rejected:
+   a whole-debate route flag and a per-engine `@cli` suffix.
+2. **Pinned models: none for client engines.** Follows from 1: the full
+   name typed is the pin, auditable in the transcript. The 2026-08-27 pins
+   for the API aliases are untouched.
 6. **Delivery: reviewed pull requests**, settled project-wide; see the
    delivery method above.
 
 ## Open Questions, for the owner
 
-2. The pinned models. The specification pins the model behind a vendor
-   alias in code. For a client the model is what `--model` or `-m` selects;
-   the clients' own defaults are not auditable. Pin them in code as today,
-   or accept the client's default and record what the client reports?
-   Pinning is recommended.
 3. Browsing. `claude -p` can be allowed its web search tool; `codex exec`
    has its own web search. Map `--browse` onto those, or keep `--browse`
    off for client engines in the first slice? Off first is recommended, so
@@ -156,8 +165,9 @@ that were rejected so they are not re-proposed.
 ## Workstream Document Index
 
 - [Design: intent resolution](2026-10-14-design-intent-resolution.md),
-  the proposal of 2026-10-14 that replaces the six mechanism questions with
-  a lineup plus an access policy; open until the owner decides.
+  a proposal of 2026-10-14, rejected the same day in favor of the `cli-`
+  form; kept for the reasoning it records. Read only to see what was not
+  chosen.
 
 - `intake/`: empty; `intake-dispositions.md` holds the decision log.
 - The access-route decision this extends:
