@@ -9,7 +9,7 @@ models reached through API keys. The debate protocol, the transcript and
 the reported state stay as the invocation specification defines them; only
 the access route changes.
 
-State: `active; design settled, first slice next`
+State: `active; slice 1 reviewed, authentication and isolation findings open`
 
 Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@426b1fa5ef12
 
@@ -61,21 +61,29 @@ environment."
 
 ## Current Task
 
-Review checkpoint, 2026-10-14: reviewing implementation `36b026d` on
+Review handoff, 2026-10-14: reviewed implementation `36b026d` on
 `ws-cli-engines/v0-review`, confined to the trading-review worktree. The
 owner's review brief supersedes the implementation-next handoff below.
-Baseline gate: 62 tests, compile and lint pass; CLI help passes. Reproduced
-locale-dependent Unicode failure; the review fix uses UTF-8 for client
-pipes, with a failing-before/passing-after ASCII-locale regression.
-Authentication isolation and MCP isolation remain review findings requiring
-implementor validation. Detailed review delivery will be root `REVIEW.md`,
-uncommitted as requested. `REVIEW-BRIEF.md` was already untracked and is
+Requirements: R-PROTO-001 and the slice-1 work order. Nine review findings,
+four fixes committed: UTF-8 pipes (`59e466e`), actionable auth-process
+failures (`6bfd167`), unsupported temperature refusal (`a43c027`), and cost
+wording (`6369b46`). Baseline gate: 62 tests; final gate: 66 tests, compile
+and lint pass. CLI help and diff whitespace checks pass. Additional offline
+probes confirmed refusals before model calls and label/result handling.
+Authentication isolation and MCP isolation remain high-priority findings;
+override precedence needs clarification, and the fake needs its separately
+retained live provenance. No live client was invoked. Detailed review is
+root `REVIEW.md`, uncommitted as requested and temporary rather than a new
+permanent indexed document. `REVIEW-BRIEF.md` was already untracked and is
 preserved. Brief/mail checks found no incoming mail, live claim, definition
 change or commits behind main: no synchronization is needed. The explicit
 "push nothing" instruction overrides remote claim/publish/release operations;
 review custody is recorded here locally instead. No other checkout is used.
-Next: finish the review, commit confident fixes separately, and hand back
-the findings; the original slice finish criteria still apply.
+Next: implementor reviews the four local fixes and `REVIEW.md`, resolves
+the open boundaries, and attaches the separate live acceptance evidence.
+Nothing was pushed. The original slice finish criteria still apply.
+
+### Original implementation handoff (superseded by the review above)
 
 Design settled 2026-10-14; see *Decisions*. Next: slice 1, the `claude`
 client engine, delivered as the project's first reviewed pull request.
@@ -189,9 +197,11 @@ that were rejected so they are not re-proposed.
 
 ## Open Threads
 
-- Awaiting the human: the go-ahead to start slice 1 under its work order;
-  the reviewer pair runs on `codex` unless the owner says otherwise.
-- Weighed and unresolved: nothing; the six questions are decided above.
+- Awaiting the implementor: resolve the review's authentication/isolation
+  findings and supply the separate live acceptance evidence before merging.
+- Weighed and unresolved: precedence of environment overrides versus typed
+  client pins; the review records the conflicting promises. The six original
+  owner decisions above remain authoritative.
 - Deliberately not preserved: the chat in which the questions were asked.
 
 ## Workstream Document Index
