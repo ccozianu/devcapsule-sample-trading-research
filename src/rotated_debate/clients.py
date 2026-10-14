@@ -23,6 +23,7 @@ import shutil
 import subprocess
 import tempfile
 from collections.abc import Callable, Mapping
+from pathlib import Path
 
 from rotated_debate import prompts
 
@@ -41,10 +42,27 @@ PLANNED_SLICE = {"codex": "slice 2", "antigravity": "slice 3"}
 TIMEOUT_ENV = "ROTATED_DEBATE_CLIENT_TIMEOUT"
 DEFAULT_TIMEOUT = 600.0
 
-# Direct credentials and custom headers that can carry an API key or token.
-# Remove these from both subprocesses. This does not validate credentials
-# supplied by stored client configuration, managed settings or cloud providers.
-KEY_VARIABLES = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_CUSTOM_HEADERS")
+# Direct credentials, custom headers that can carry one, and the selectors
+# of the cloud-provider routes (Bedrock, Vertex, Foundry) that bill a cloud
+# account instead of the sign-in. Removed from both subprocesses. Credentials
+# supplied by managed settings are outside this module's reach; the sign-in
+# check below reads what the client itself reports and refuses any method
+# other than the claude.ai sign-in.
+KEY_VARIABLES = (
+    "ANTHROPIC_API_KEY",
+    "ANTHROPIC_AUTH_TOKEN",
+    "ANTHROPIC_CUSTOM_HEADERS",
+    "CLAUDE_CODE_USE_BEDROCK",
+    "CLAUDE_CODE_USE_VERTEX",
+    "CLAUDE_CODE_USE_FOUNDRY",
+    "AWS_BEARER_TOKEN_BEDROCK",
+)
+# What `claude auth status` reports for the claude.ai sign-in, recorded in
+# tests/fixtures/claude-client/auth-status.json.
+SIGNED_IN = {"authMethod": "claude.ai", "apiProvider": "firstParty"}
+# Files whose presence in an ancestor directory means the client would load
+# instructions from there; the empty working directory must have none.
+INSTRUCTION_MARKERS = ("CLAUDE.md", ".claude")
 
 Runner = Callable[..., "subprocess.CompletedProcess[str]"]
 
@@ -147,6 +165,32 @@ def _check_claude_signed_in(executable: str, run: Runner) -> None:
             "the 'claude' client is not signed in; run `claude` once and sign in "
             "(no API key is read on this route), then rerun"
         )
+    found = {key: status.get(key) for key in SIGNED_IN}
+    if found != SIGNED_IN:
+        raise SystemExit(
+            f"the 'claude' client reports {found} where the claude.ai sign-in "
+            f"reports {SIGNED_IN}; this route uses only the sign-in, so sign in "
+            f"through claude.ai or use the API route for this engine"
+        )
+
+
+def _instruction_free_directory() -> tempfile.TemporaryDirectory[str]:
+    """An empty directory of our own with no `CLAUDE.md` or `.claude` in any
+    ancestor, so the client loads no instructions from the file system. The
+    temporary root follows `TMPDIR`; one pointed inside a project would
+    defeat the isolation, so that is refused rather than silently accepted."""
+    workdir = tempfile.TemporaryDirectory(prefix="rotated-debate-client-")
+    path = Path(workdir.name).resolve()
+    for ancestor in path.parents:
+        for marker in INSTRUCTION_MARKERS:
+            if (ancestor / marker).exists():
+                workdir.cleanup()
+                raise SystemExit(
+                    f"the temporary directory {path} sits under {ancestor}, which "
+                    f"carries {marker}; the client would load instructions from "
+                    f"there. Point TMPDIR at a directory outside any project"
+                )
+    return workdir
 
 
 def _split_messages(messages: list[prompts.Message]) -> tuple[str, str]:
@@ -174,11 +218,13 @@ def claude_command(executable: str, model: str, system_prompt: str) -> list[str]
     built-in tools and `--strict-mcp-config` with no `--mcp-config` leaves it
     no MCP servers; `--setting-sources ""` ignores the user, project and
     local settings files; `--no-session-persistence` saves no session. The
-    call also runs in an empty working directory (see `build_client_chat_fn`)
-    because the client discovers `CLAUDE.md` from its working directory
+    call also runs in an empty working directory with no instruction files
+    in any ancestor (see `_instruction_free_directory`) because the client
+    discovers `CLAUDE.md` from its working directory and its ancestors
     regardless of setting sources: measured 805 input tokens from this
-    repository against 417 from an empty directory for the same prompt.
-    Managed (organization) settings are outside these flags' reach.
+    repository against 417 from an empty directory for the same prompt, a
+    measurement on this version, not a guarantee. Managed (organization)
+    settings are outside these flags' reach.
     """
     return [
         executable,
@@ -245,9 +291,8 @@ def build_client_chat_fn(
     client, model = split_client_model_id(model_id)
     executable = _executable(client)
     timeout = _timeout()
-    # An empty directory of our own, so the client finds no CLAUDE.md, no
-    # project settings and no files; removed when the engine is collected.
-    workdir = tempfile.TemporaryDirectory(prefix="rotated-debate-client-")
+    # Removed when the engine is collected; see _instruction_free_directory.
+    workdir = _instruction_free_directory()
 
     def chat(messages: list[prompts.Message]) -> str:
         system_prompt, prompt = _split_messages(messages)

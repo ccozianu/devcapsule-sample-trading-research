@@ -92,10 +92,13 @@ Each item can be, in order of resolution priority:
    client to sign in to. The client is called as a plain chat engine: the
    role prompt as its whole system prompt, no built-in tools, no MCP
    servers, no saved session, in an empty working directory, with
-   `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, and
-   `ANTHROPIC_CUSTOM_HEADERS` removed from its environment to block direct
-   key/token variables and credentials in custom request headers. Managed
-   organization settings, if your client has any, still apply. `--browse`
+   `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_CUSTOM_HEADERS`
+   and the Bedrock, Vertex and Foundry route selectors removed from its
+   environment, and the client's own sign-in report must say claude.ai,
+   first party; any other method refuses. Managed organization settings,
+   if your client has any, still apply. If `TMPDIR` points inside a
+   project, the engine refuses rather than let the client read that
+   project's instructions. `--browse`
    and `--temperature` are not available on this route and refuse, naming
    the engine. Routes mix freely:
    `--engines cli-claude-fable-5-1,gemini,chatgpt` is a normal debate. One

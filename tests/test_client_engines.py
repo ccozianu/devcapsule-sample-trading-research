@@ -201,6 +201,30 @@ class RefusalTests(FakeClientMixin, unittest.TestCase):
         self.assertIn("not signed in", str(ctx.exception))
         self.assertEqual([c["argv"] for c in self.calls()], [["auth", "status"]])
 
+    def test_other_sign_in_methods_are_refused(self) -> None:
+        for method in ({"authMethod": "api_key"}, {"apiProvider": "bedrock"}):
+            status = {**AUTH_STATUS, **method}
+
+            def run(command, status=status, **kwargs):
+                return subprocess.CompletedProcess(
+                    command, 0, stdout=json.dumps(status), stderr=""
+                )
+
+            with self.assertRaises(SystemExit) as ctx:
+                clients.check_available("cli-claude:claude-fable-5-1", run=run)
+            self.assertIn("claude.ai", str(ctx.exception))
+
+    def test_temporary_root_under_a_project_is_refused(self) -> None:
+        project = Path(self._tmp.name) / "project"
+        (project / "tmp").mkdir(parents=True)
+        (project / "CLAUDE.md").write_text("instructions", encoding="utf-8")
+        with patch.dict(os.environ, {"TMPDIR": str(project / "tmp")}):
+            with patch.object(tempfile, "tempdir", None):
+                with self.assertRaises(SystemExit) as ctx:
+                    build_chat_fn("cli-claude:claude-fable-5-1", None, label="x")
+        self.assertIn("CLAUDE.md", str(ctx.exception))
+        self.assertEqual(list((project / "tmp").iterdir()), [])
+
     def test_signed_out_status_exit_code_alone_is_a_refusal(self) -> None:
         def run(command, **kwargs):
             return subprocess.CompletedProcess(command, 1, stdout="", stderr="not logged in")
@@ -282,6 +306,13 @@ assert chat([("system", "s"), ("user", "caf\u00e9 \u6c34")]) == "R\u00e9ponse: \
         calls = self.calls()
         self.assertEqual([c["argv"][:2] for c in calls][0], ["auth", "status"])
         self.assertTrue(all(c["key_vars"] == [] for c in calls), calls)
+
+    def test_cloud_route_selectors_never_reach_the_client(self) -> None:
+        selectors = {"CLAUDE_CODE_USE_BEDROCK": "1", "AWS_BEARER_TOKEN_BEDROCK": "t"}
+        with patch.dict(os.environ, selectors):
+            env = clients.client_env()
+        self.assertNotIn("CLAUDE_CODE_USE_BEDROCK", env)
+        self.assertNotIn("AWS_BEARER_TOKEN_BEDROCK", env)
 
     def test_fake_answers_from_the_recorded_fixture(self) -> None:
         chat = build_chat_fn("cli-claude:claude-fable-5-1", None, label="x")
