@@ -108,6 +108,7 @@ def _check_claude_signed_in(executable: str, run: Runner) -> None:
         [executable, "auth", "status"],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=60,
         check=False,
     )
@@ -225,6 +226,7 @@ def build_client_chat_fn(
                 input=prompt,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
                 timeout=timeout,
                 check=False,
             )

@@ -10,6 +10,7 @@ import json
 import os
 import stat
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -29,6 +30,8 @@ from rotated_debate.engines import (
 FAKE_CLAUDE = r'''#!/usr/bin/env python3
 """Fake `claude`: records its argv, answers like the real client."""
 import json, os, sys
+sys.stdin.reconfigure(encoding="utf-8")
+sys.stdout.reconfigure(encoding="utf-8")
 log = os.environ.get("FAKE_CLAUDE_LOG")
 if log:
     with open(log, "a", encoding="utf-8") as fh:
@@ -49,7 +52,7 @@ print(json.dumps({
               "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0,
               "server_tool_use": {"web_search_requests": 0, "web_fetch_requests": 0},
               "service_tier": "standard"},
-}))
+}, ensure_ascii=False))
 '''
 
 ENGINE_REPLY = (
@@ -164,6 +167,25 @@ class RefusalTests(FakeClientMixin, unittest.TestCase):
 
 
 class ClaudeCallTests(FakeClientMixin, unittest.TestCase):
+    def test_unicode_round_trip_in_an_ascii_locale(self) -> None:
+        os.environ["FAKE_CLAUDE_REPLY"] = "Réponse: 水"
+        code = r'''
+import os
+from rotated_debate.engines import build_chat_fn
+# The fake, like the real Node client, uses UTF-8 independent of our locale.
+os.environ["PYTHONUTF8"] = "1"
+chat = build_chat_fn("cli-claude:claude-fable-5-1", None, label="x")
+assert chat([("system", "s"), ("user", "caf\u00e9 \u6c34")]) == "R\u00e9ponse: \u6c34"
+'''
+        completed = subprocess.run(
+            [sys.executable, "-c", code],
+            env={**os.environ, "LC_ALL": "C", "PYTHONUTF8": "0",
+                 "PYTHONCOERCECLOCALE": "0"},
+            capture_output=True, encoding="utf-8", check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(self.calls()[-1]["stdin"], "café 水")
+
     def test_command_line_and_prompt_routing(self) -> None:
         chat = build_chat_fn("cli-claude:claude-fable-5-1", None, label="cli-claude-fable-5-1")
         reply = chat([("system", "You are the ANSWERER."), ("user", "Question: why?")])

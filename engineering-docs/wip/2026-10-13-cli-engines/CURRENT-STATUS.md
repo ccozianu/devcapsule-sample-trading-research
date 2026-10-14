@@ -61,6 +61,22 @@ environment."
 
 ## Current Task
 
+Review checkpoint, 2026-10-14: reviewing implementation `36b026d` on
+`ws-cli-engines/v0-review`, confined to the trading-review worktree. The
+owner's review brief supersedes the implementation-next handoff below.
+Baseline gate: 62 tests, compile and lint pass; CLI help passes. Reproduced
+locale-dependent Unicode failure; the review fix uses UTF-8 for client
+pipes, with a failing-before/passing-after ASCII-locale regression.
+Authentication isolation and MCP isolation remain review findings requiring
+implementor validation. Detailed review delivery will be root `REVIEW.md`,
+uncommitted as requested. `REVIEW-BRIEF.md` was already untracked and is
+preserved. Brief/mail checks found no incoming mail, live claim, definition
+change or commits behind main: no synchronization is needed. The explicit
+"push nothing" instruction overrides remote claim/publish/release operations;
+review custody is recorded here locally instead. No other checkout is used.
+Next: finish the review, commit confident fixes separately, and hand back
+the findings; the original slice finish criteria still apply.
+
 Design settled 2026-10-14; see *Decisions*. Next: slice 1, the `claude`
 client engine, delivered as the project's first reviewed pull request.
 
