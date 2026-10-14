@@ -104,14 +104,25 @@ def check_available(model_id: str, run: Runner = subprocess.run) -> None:
 
 
 def _check_claude_signed_in(executable: str, run: Runner) -> None:
-    completed = run(
-        [executable, "auth", "status"],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        timeout=60,
-        check=False,
-    )
+    try:
+        completed = run(
+            [executable, "auth", "status"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=60,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise SystemExit(
+            "the 'claude' client sign-in check did not finish within 60s; "
+            "check `claude auth status` and rerun"
+        ) from exc
+    except OSError as exc:
+        raise SystemExit(
+            f"could not run the 'claude' client sign-in check: {exc}; "
+            "check the client installation and rerun"
+        ) from exc
     status: Mapping[str, object] = {}
     try:
         parsed = json.loads(completed.stdout or "{}")

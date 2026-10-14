@@ -134,6 +134,21 @@ class GrammarTests(unittest.TestCase):
 
 
 class RefusalTests(FakeClientMixin, unittest.TestCase):
+    def test_auth_process_failures_are_actionable_refusals(self) -> None:
+        for error, expected in (
+            (subprocess.TimeoutExpired(["claude", "auth", "status"], 60), "60s"),
+            (OSError("cannot execute"), "installation"),
+        ):
+            with self.subTest(error=error):
+                def fail(command, error=error, **kwargs):
+                    raise error
+
+                with self.assertRaises(SystemExit) as ctx:
+                    clients.check_available("cli-claude:claude-fable-5-1", run=fail)
+                self.assertIn("claude", str(ctx.exception))
+                self.assertIn(expected, str(ctx.exception))
+        self.assertEqual(self.calls(), [])
+
     def test_browse_is_refused_before_any_call_naming_the_engines(self) -> None:
         specs = parse_engine_args("cli-claude-fable-5-1,gemini,chatgpt")
         with self.assertRaises(SystemExit) as ctx:
