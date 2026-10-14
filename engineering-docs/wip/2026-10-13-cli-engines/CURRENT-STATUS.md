@@ -9,7 +9,7 @@ models reached through API keys. The debate protocol, the transcript and
 the reported state stay as the invocation specification defines them; only
 the access route changes.
 
-State: `active; design first, then the first engine`
+State: `active; design settled, first slice next`
 
 Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@426b1fa5ef12
 
@@ -60,6 +60,9 @@ environment."
   and one made through an API are comparable.
 
 ## Current Task
+
+Design settled 2026-10-14; see *Decisions*. Next: slice 1, the `claude`
+client engine, delivered as the project's first reviewed pull request.
 
 Mail taken 2026-10-14: `project-management` forwarded the DevCapsule
 process record as design input; acknowledged, see the decision log. The
@@ -112,10 +115,15 @@ are under *Open Questions*. The facts found so far:
   providers are touched, and `resolve_model_id` is the alias resolution the
   specification binds.
 
-Next resumable task: the owner answers the open questions; then the first
-slice, a `claude`-backed engine with pinned model, usage accounting and the
-sign-in check, with tests that run a fake client script and never the real
-one.
+Next resumable task: slice 1. In `engines.py`, recognize a `cli-<model>`
+item, infer the vendor from the model name, build a `ChatFn` that runs the
+vendor's client as a chat engine (for `claude`: `-p`, JSON output, the
+engine prompt as the whole system prompt, no tools, no session
+persistence, the model pinned to the typed name), check sign-in before the
+debate starts and refuse plainly if absent, refuse `--browse` for such an
+engine, record the client's usage report as-is, and label the engine as
+typed in the transcript. Tests run a fake client script, never the real
+one. Deliver as a reviewed pull request per *Delivery And Review*.
 
 ## Decisions, 2026-10-14
 
@@ -145,22 +153,28 @@ that were rejected so they are not re-proposed.
 2. **Pinned models: none for client engines.** Follows from 1: the full
    name typed is the pin, auditable in the transcript. The 2026-08-27 pins
    for the API aliases are untouched.
+3. **Browsing: refused on client engines in the first slices.** `--browse`
+   with a `cli-` engine stops before any call, naming the engine. Mapping
+   it onto each client's own web tool is a later slice, if wanted.
+   Rejected for now: allowing the `claude` client's web search in slice 1,
+   so that the first client transcripts compare like for like with API
+   transcripts without browsing.
+4. **Usage: recorded as the client reports it**, under the engine's key in
+   the same usage sink, with the client named as the source; the `claude`
+   client's dollar cost and `codex`'s reasoning tokens included, nothing
+   normalized.
+5. **Order: `claude`, then `codex`, then `antigravity`**, one slice each,
+   Antigravity after its print-mode usage report is probed on this
+   capsule. Rejected: all three clients in one slice.
 6. **Delivery: reviewed pull requests**, settled project-wide; see the
    delivery method above.
 
-## Open Questions, for the owner
+## Open Threads
 
-3. Browsing. `claude -p` can be allowed its web search tool; `codex exec`
-   has its own web search. Map `--browse` onto those, or keep `--browse`
-   off for client engines in the first slice? Off first is recommended, so
-   the first transcripts compare like for like with the API route.
-4. Usage and cost. The clients report tokens and, for `claude`, a cost in
-   dollars under a subscription. Record what each reports, in the same
-   usage sink, with the client named as the source?
-5. The Antigravity client. Its non-interactive invocation and its usage
-   report are unverified here, since the client is absent on this capsule.
-   Take it as the third slice, after `claude` and `codex`, verified in this
-   project's own capsule?
+- Awaiting the human: the go-ahead to start slice 1, and the choice of the
+  reviewer pair's client for its first pull request.
+- Weighed and unresolved: nothing; the six questions are decided above.
+- Deliberately not preserved: the chat in which the questions were asked.
 
 ## Workstream Document Index
 
