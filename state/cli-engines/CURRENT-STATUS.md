@@ -9,7 +9,7 @@ models reached through API keys. The debate protocol, the transcript and
 the reported state stay as the invocation specification defines them; only
 the access route changes.
 
-State: `active; design settled, first slice next`
+State: `active; slice 1 implemented, in review`
 
 Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@426b1fa5ef12
 
@@ -61,8 +61,53 @@ environment."
 
 ## Current Task
 
-Design settled 2026-10-14; see *Decisions*. Next: slice 1, the `claude`
-client engine, delivered as the project's first reviewed pull request.
+Slice 1, the `claude` client engine, implemented on 2026-10-14 under the
+[work order](../../work-orders/2026-10-14-cli-engines-slice-1-claude-client.md)
+and in review.
+
+What landed on the branch, commit `36b026d`: `clients.py`, new, the client
+route; `engines.py` dispatches `cli-<model>` items to it and widens the
+usage sink to numeric fields; `docs/rotated-debate.md` documents the form;
+`tests/test_client_engines.py`, 19 tests on a fake `claude` script. Gate:
+62 tests (43 before), compile and lint clean, offline. Refusals exercised
+against the real environment with no model call: `--browse`, the `codex`
+and `antigravity` placeholders, an unrecognized name, a missing client.
+
+Live validation, commit after this one: a real debate with three engines
+through the signed-in `claude` client, retained as
+`tests/resources/test-debates/20261014-214924-cli-claude-91-prime-debate.md`.
+`state=converged`, zero parse errors, 12 client calls, 3m47s,
+$0.69 at list price as the client reports it. Two probes of the
+client preceded it (stdin prompt, JSON shape), 403 input tokens each.
+
+Judgments taken, for the owner's review in the pull request:
+
+- The route lives in a sibling module, `clients.py`; `engines.py` stays
+  the only module callers go through and dispatches by the `cli-` prefix.
+- A client engine's transcript entry reads `cli-claude:<model>`, the
+  client and the model in the existing `provider:model` slot; the client
+  version is not recorded.
+- The usage sink's value type widened from `int` to `int | float` so the
+  client's dollar cost is recorded as reported; `record_usage` now sums
+  floats too.
+- One client call is bounded by a 600 s timeout, overridable by
+  `ROTATED_DEBATE_CLIENT_TIMEOUT`; a timeout or non-zero exit raises with
+  the engine named, as an API failure would.
+- The prompt travels on stdin; the system prompt on the command line.
+  `--setting-sources ""` keeps the repository's own agent configuration
+  out of the engine; `--tools ""` leaves it no tools.
+- No environment override for `cli-` items: hyphens make the variable
+  name unusable, and the typed name is the pin.
+
+Review round 1 in progress: the reviewer pair runs `codex` on
+`gpt-6-astra` in its own worktree on `ws-cli-engines/v0-review`, from the
+brief the implementor wrote. Codex's own sandbox needs Linux user
+namespaces the capsule does not grant (`bwrap` fails), so it runs with its
+sandbox bypassed; the capsule is the sandbox.
+
+Pull request: the GitHub CLI is not installed in the capsule and no token
+is present, so the pull request against `main` is opened by the owner
+from the pushed branch; its body is drafted by the implementor.
 
 Mail taken 2026-10-14: `project-management` forwarded the DevCapsule
 process record as design input; acknowledged, see the decision log. The
@@ -115,9 +160,11 @@ are under *Open Questions*. The facts found so far:
   providers are touched, and `resolve_model_id` is the alias resolution the
   specification binds.
 
-Next resumable task: slice 1, scoped in the
-[work order of 2026-10-14](../../work-orders/2026-10-14-cli-engines-slice-1-claude-client.md).
-In short: in `engines.py`, recognize a `cli-<model>`
+Next resumable task: finish review round 1 (read the reviewer's diff,
+assess, merge or push back, at most three rounds), rerun the gate on the
+merged branch, hand the pull request to the owner with the counts; then
+the owner's mixed-route acceptance run. The original scope, for the
+record: in `engines.py`, recognize a `cli-<model>`
 item, infer the vendor from the model name, build a `ChatFn` that runs the
 vendor's client as a chat engine (for `claude`: `-p`, JSON output, the
 engine prompt as the whole system prompt, no tools, no session
@@ -173,8 +220,9 @@ that were rejected so they are not re-proposed.
 
 ## Open Threads
 
-- Awaiting the human: the go-ahead to start slice 1 under its work order;
-  the reviewer pair runs on `codex` unless the owner says otherwise.
+- Awaiting the human: opening the pull request from the pushed branch,
+  and the mixed-route acceptance run (`cli-claude-fable-5-1,gemini,chatgpt`)
+  with the API keys only the owner holds.
 - Weighed and unresolved: nothing; the six questions are decided above.
 - Deliberately not preserved: the chat in which the questions were asked.
 
