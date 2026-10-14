@@ -71,12 +71,37 @@ Each item can be, in order of resolution priority:
 
    Example: `--engines claude-sonnet-5,gemini-3.1-pro-preview,gpt-5.5-pro`.
 
+5. **A model through its vendor's command-line client** — `cli-` in front
+   of a full model name: `cli-claude-fable-5-1`. No API key is involved;
+   the model is reached through the client you are already signed in to,
+   and billed to that subscription. The vendor is inferred from the name
+   exactly as for a bare model name, and each vendor has one client:
+
+   | Name shape | Client | Available |
+   |---|---|---|
+   | `cli-claude-*` | `claude` | yes |
+   | `cli-gpt-*`, `cli-o<digit>*` | `codex` | not yet (slice 2) |
+   | `cli-gemini-*` | `antigravity` | not yet (slice 3) |
+
+   The name after `cli-` is passed to the client unchanged, so it must be
+   an id the client accepts (`claude --model` takes full names); a wrong
+   id fails at the client with its own message. Before the debate starts,
+   each client is asked whether it is signed in; if one is not, nothing
+   runs and the message names the client to sign in to. The client is
+   called as a plain chat engine: the role prompt as its whole system
+   prompt, no tools, no session, no access to your files or settings.
+   `--browse` is not available on this route yet and refuses, naming the
+   engine. Routes mix freely: `--engines cli-claude-fable-5-1,gemini,chatgpt`
+   is a normal debate. One client call may take up to ten minutes
+   (`ROTATED_DEBATE_CLIENT_TIMEOUT` seconds overrides).
+
 Anything that fits none of these is an error naming the accepted forms.
 A debate needs at least three engines.
 
 In transcripts and progress output, engines are always reported by their
 **model name** (`claude-fable-5`), not the alias you typed — reports name
-what actually ran.
+what actually ran. A client engine is reported as typed, `cli-claude-fable-5-1`,
+so the same model by API and by client in one debate stay distinct.
 
 ## Other flags
 
@@ -85,7 +110,7 @@ what actually ran.
 | `--context FILE` | none | Prepend file(s) as shared context for every role; repeatable. |
 | `--rotations N` | 3 | Role-assignment triples to run. With 3 engines, 3 = every engine plays every role once (balanced); 6 = all permutations. |
 | `--rounds N` | 1 | Critique→rebuttal exchanges per rotation before synthesis. |
-| `--browse` | off | Give every engine its vendor's server-side web-search tool (Anthropic web search, OpenAI web search via the Responses API, Google Search grounding). Search runs on the provider's servers and is billed per search, on top of tokens; Anthropic searches are capped at 5 per call. Only works for providers with a known browse tool (currently the three above) — others error. |
+| `--browse` | off | Give every engine its vendor's server-side web-search tool (Anthropic web search, OpenAI web search via the Responses API, Google Search grounding). Search runs on the provider's servers and is billed per search, on top of tokens; Anthropic searches are capped at 5 per call. Only works for providers with a known browse tool (currently the three above) — others error, and `cli-` engines refuse it for now. |
 | `--temperature T` | provider default | Only sent when set. Current Anthropic and OpenAI models reject an explicit temperature — leave unset unless you know the model accepts it. |
 | `--add-last-synthesizer MODEL` | off | Add a final synthesis over the rotation syntheses, produced by `MODEL` (any form `--engines` items accept, e.g. `gemini-3.7-flash`). The last synthesizer is a judge of the record, not a participant: it **never browses**, is instructed to use only the text at hand, and reports agreement/disagreement on facts and on reasoning separately. Its verdict is recorded alongside the others in `outcome_state` — it does not change the reported `state=` line. |
 | `--out FILE` | `debate-<timestamp>.md` | Transcript path. The only file the command writes. |
@@ -95,12 +120,15 @@ what actually ran.
 One Markdown file: YAML frontmatter, then the answers, then every
 rotation's full exchange and synthesis. Frontmatter worth knowing:
 
-- `engines` — reporting label → `provider:model` actually used.
+- `engines` — reporting label → `provider:model` actually used; a client
+  engine reads `cli-claude:claude-fable-5-1`, the client and the model.
 - `usage` — per-engine consumption totals as reported by the provider
   (token counts for all current bindings) plus a `calls` counter, and —
   on browsing runs, where the provider reports it — server-side search
-  counts (e.g. `web_search_requests`). This is where you read what a
-  debate cost.
+  counts (e.g. `web_search_requests`). A client engine adds what its
+  client reports: for `claude`, `total_cost_usd` as the client prices the
+  calls under the subscription, and `num_turns`. This is where you read
+  what a debate cost.
 - `outcome_state` — reserves `deterministic_tally` (future) alongside the
   `synthesizer_meta` verdict aggregation and, when
   `--add-last-synthesizer` was used, the `last_synthesizer_verdict` with

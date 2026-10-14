@@ -19,7 +19,7 @@ def render(
     result: DebateResult,
     generated_at: str,
     engine_models: dict[str, str],
-    usage: dict[str, dict[str, int]] | None = None,
+    usage: dict[str, dict[str, int | float]] | None = None,
 ) -> str:
     reasoned = sum(1 for c in result.concessions if not c.capitulation)
     capitulations = sum(1 for c in result.concessions if c.capitulation)
