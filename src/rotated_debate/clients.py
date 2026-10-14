@@ -21,6 +21,7 @@ import json
 import os
 import shutil
 import subprocess
+import tempfile
 from collections.abc import Callable, Mapping
 
 from rotated_debate import prompts
@@ -39,6 +40,11 @@ PLANNED_SLICE = {"codex": "slice 2", "antigravity": "slice 3"}
 # Seconds a single client call may take before it is reported as a failure.
 TIMEOUT_ENV = "ROTATED_DEBATE_CLIENT_TIMEOUT"
 DEFAULT_TIMEOUT = 600.0
+
+# Variables that would let a client bill an API key instead of its sign-in.
+# They are removed from every client subprocess, status check included, so
+# the route is the subscription whatever the parent shell exports.
+KEY_VARIABLES = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")
 
 Runner = Callable[..., "subprocess.CompletedProcess[str]"]
 
@@ -74,6 +80,10 @@ def is_client_model_id(model_id: str) -> bool:
     return model_id.startswith(CLI_PREFIX) and ":" in model_id
 
 
+def client_env() -> dict[str, str]:
+    return {key: value for key, value in os.environ.items() if key not in KEY_VARIABLES}
+
+
 def _timeout() -> float:
     raw = os.environ.get(TIMEOUT_ENV)
     return float(raw) if raw else DEFAULT_TIMEOUT
@@ -107,11 +117,13 @@ def _check_claude_signed_in(executable: str, run: Runner) -> None:
     try:
         completed = run(
             [executable, "auth", "status"],
+            stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
             encoding="utf-8",
             timeout=60,
             check=False,
+            env=client_env(),
         )
     except subprocess.TimeoutExpired as exc:
         raise SystemExit(
@@ -158,10 +170,15 @@ def claude_command(executable: str, model: str, system_prompt: str) -> list[str]
 
     The prompt travels on stdin so a large context packet never hits the
     argument-length limit. `--system-prompt` replaces the client's own agent
-    prompt (about 20,000 tokens otherwise); `--tools ""` leaves it no tools;
-    `--setting-sources ""` ignores every settings file, so the repository's
-    own agent configuration never shapes an engine; `--no-session-persistence`
-    writes nothing to disk.
+    prompt (about 20,000 tokens otherwise); `--tools ""` leaves it no
+    built-in tools and `--strict-mcp-config` with no `--mcp-config` leaves it
+    no MCP servers; `--setting-sources ""` ignores the user, project and
+    local settings files; `--no-session-persistence` saves no session. The
+    call also runs in an empty working directory (see `build_client_chat_fn`)
+    because the client discovers `CLAUDE.md` from its working directory
+    regardless of setting sources: measured 805 input tokens from this
+    repository against 417 from an empty directory for the same prompt.
+    Managed (organization) settings are outside these flags' reach.
     """
     return [
         executable,
@@ -177,6 +194,7 @@ def claude_command(executable: str, model: str, system_prompt: str) -> list[str]
         "--no-session-persistence",
         "--setting-sources",
         "",
+        "--strict-mcp-config",
     ]
 
 
@@ -227,6 +245,9 @@ def build_client_chat_fn(
     client, model = split_client_model_id(model_id)
     executable = _executable(client)
     timeout = _timeout()
+    # An empty directory of our own, so the client finds no CLAUDE.md, no
+    # project settings and no files; removed when the engine is collected.
+    workdir = tempfile.TemporaryDirectory(prefix="rotated-debate-client-")
 
     def chat(messages: list[prompts.Message]) -> str:
         system_prompt, prompt = _split_messages(messages)
@@ -240,6 +261,8 @@ def build_client_chat_fn(
                 encoding="utf-8",
                 timeout=timeout,
                 check=False,
+                env=client_env(),
+                cwd=workdir.name,
             )
         except subprocess.TimeoutExpired as exc:
             raise RuntimeError(
@@ -258,4 +281,5 @@ def build_client_chat_fn(
             record_server_tool_use(usage_sink, label, {"usage": usage})
         return text
 
+    chat.workdir = workdir  # type: ignore[attr-defined]  # keeps the directory alive
     return chat

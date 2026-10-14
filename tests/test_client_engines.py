@@ -28,32 +28,41 @@ from rotated_debate.engines import (
     resolve_model_id,
 )
 
+FIXTURES = Path(__file__).parent / "fixtures" / "claude-client"
+PRINT_RESULT = json.loads((FIXTURES / "print-result.json").read_text(encoding="utf-8"))
+AUTH_STATUS = json.loads((FIXTURES / "auth-status.json").read_text(encoding="utf-8"))
+
 FAKE_CLAUDE = r'''#!/usr/bin/env python3
-"""Fake `claude`: records its argv, answers like the real client."""
+"""Fake `claude`: records its call, answers from the recorded fixtures."""
 import json, os, sys
 sys.stdin.reconfigure(encoding="utf-8")
 sys.stdout.reconfigure(encoding="utf-8")
+fixtures = os.environ["FAKE_CLAUDE_FIXTURES"]
 log = os.environ.get("FAKE_CLAUDE_LOG")
 if log:
     with open(log, "a", encoding="utf-8") as fh:
-        fh.write(json.dumps({"argv": sys.argv[1:], "stdin": sys.stdin.read()}) + "\n")
+        fh.write(json.dumps({
+            "argv": sys.argv[1:], "stdin": sys.stdin.read(), "cwd": os.getcwd(),
+            "key_vars": sorted(k for k in os.environ
+                               if k in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")),
+        }) + "\n")
 if sys.argv[1:3] == ["auth", "status"]:
-    print(json.dumps({"loggedIn": os.environ.get("FAKE_CLAUDE_LOGGED_IN", "1") == "1",
-                      "authMethod": "claude.ai", "subscriptionType": "max"}))
+    with open(os.path.join(fixtures, "auth-status.json"), encoding="utf-8") as fh:
+        status = json.load(fh)
+    if os.environ.get("FAKE_CLAUDE_LOGGED_IN", "1") != "1":
+        status["loggedIn"] = False
+        print(json.dumps(status))
+        sys.exit(1)
+    print(json.dumps(status))
     sys.exit(0)
 if os.environ.get("FAKE_CLAUDE_FAIL"):
     print("boom", file=sys.stderr)
     sys.exit(3)
 model = sys.argv[sys.argv.index("--model") + 1]
-reply = os.environ.get("FAKE_CLAUDE_REPLY", "answer from " + model)
-print(json.dumps({
-    "type": "result", "subtype": "success", "is_error": False, "num_turns": 1,
-    "result": reply, "total_cost_usd": 0.005,
-    "usage": {"input_tokens": 403, "output_tokens": 4,
-              "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0,
-              "server_tool_use": {"web_search_requests": 0, "web_fetch_requests": 0},
-              "service_tier": "standard"},
-}, ensure_ascii=False))
+with open(os.path.join(fixtures, "print-result.json"), encoding="utf-8") as fh:
+    report = json.load(fh)
+report["result"] = os.environ.get("FAKE_CLAUDE_REPLY", "answer from " + model)
+print(json.dumps(report, ensure_ascii=False))
 '''
 
 ENGINE_REPLY = (
@@ -76,6 +85,7 @@ class FakeClientMixin:
         self._env = dict(os.environ)
         os.environ["PATH"] = f"{self.bin}{os.pathsep}{self._env.get('PATH', '')}"
         os.environ["FAKE_CLAUDE_LOG"] = str(self.log)
+        os.environ["FAKE_CLAUDE_FIXTURES"] = str(FIXTURES)
         for key in ("FAKE_CLAUDE_LOGGED_IN", "FAKE_CLAUDE_FAIL", "FAKE_CLAUDE_REPLY"):
             os.environ.pop(key, None)
 
@@ -133,6 +143,13 @@ class GrammarTests(unittest.TestCase):
         labels = engine_labels(parse_engine_args("mine=cli-claude-fable-5-1,gemini,chatgpt"))
         self.assertEqual(labels["mine"], "cli-claude-fable-5-1")
 
+    def test_handle_override_still_wins_over_a_cli_binding(self) -> None:
+        spec = EngineSpec(alias="mine", provider_model="cli-claude-fable-5-1")
+        with patch.dict(os.environ, {"ROTATED_DEBATE_MODEL_MINE": "openai:gpt-6-astra"}):
+            self.assertEqual(resolve_model_id(spec), "openai:gpt-6-astra")
+        with patch.dict(os.environ, {"ROTATED_DEBATE_MODEL_MINE": "cli-claude-opus-5"}):
+            self.assertEqual(resolve_model_id(spec), "cli-claude:claude-opus-5")
+
 
 class RefusalTests(FakeClientMixin, unittest.TestCase):
     def test_explicit_temperature_is_refused_before_any_call(self) -> None:
@@ -182,6 +199,13 @@ class RefusalTests(FakeClientMixin, unittest.TestCase):
             build_chat_fn("cli-claude:claude-fable-5-1", None, label="cli-claude-fable-5-1")
         self.assertIn("not signed in", str(ctx.exception))
         self.assertEqual([c["argv"] for c in self.calls()], [["auth", "status"]])
+
+    def test_signed_out_status_exit_code_alone_is_a_refusal(self) -> None:
+        def run(command, **kwargs):
+            return subprocess.CompletedProcess(command, 1, stdout="", stderr="not logged in")
+
+        with self.assertRaises(SystemExit):
+            clients.check_available("cli-claude:claude-fable-5-1", run=run)
 
     def test_missing_client_is_refused(self) -> None:
         os.environ["PATH"] = str(self.bin / "nowhere")
@@ -233,7 +257,33 @@ assert chat([("system", "s"), ("user", "caf\u00e9 \u6c34")]) == "R\u00e9ponse: \
         self.assertEqual(argv[argv.index("--tools") + 1], "")
         self.assertEqual(argv[argv.index("--setting-sources") + 1], "")
         self.assertIn("--no-session-persistence", argv)
+        self.assertIn("--strict-mcp-config", argv)
         self.assertEqual(call["stdin"], "Question: why?")
+
+    def test_client_runs_in_an_empty_directory_of_its_own(self) -> None:
+        chat = build_chat_fn("cli-claude:claude-fable-5-1", None, label="x")
+        chat([("system", "s"), ("user", "u")])
+        cwd = Path(self.calls()[-1]["cwd"])
+        self.assertNotEqual(cwd.resolve(), Path.cwd().resolve())
+        self.assertTrue(cwd.name.startswith("rotated-debate-client-"))
+        self.assertEqual(list(cwd.iterdir()), [])
+        self.assertIs(chat.workdir.name, chat.workdir.name)
+
+    def test_api_key_variables_never_reach_the_client(self) -> None:
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-test", "ANTHROPIC_AUTH_TOKEN": "t"}):
+            chat = build_chat_fn("cli-claude:claude-fable-5-1", None, label="x")
+            chat([("system", "s"), ("user", "u")])
+        calls = self.calls()
+        self.assertEqual([c["argv"][:2] for c in calls][0], ["auth", "status"])
+        self.assertTrue(all(c["key_vars"] == [] for c in calls), calls)
+
+    def test_fake_answers_from_the_recorded_fixture(self) -> None:
+        chat = build_chat_fn("cli-claude:claude-fable-5-1", None, label="x")
+        self.assertEqual(chat([("system", "s"), ("user", "u")]), "answer from claude-fable-5-1")
+        usage = clients.claude_usage(PRINT_RESULT)
+        self.assertEqual(usage["input_tokens"], 403)
+        self.assertEqual(usage["total_cost_usd"], PRINT_RESULT["total_cost_usd"])
+        self.assertTrue(AUTH_STATUS["loggedIn"])
 
     def test_usage_is_recorded_as_reported_with_cost(self) -> None:
         sink: dict = {}
@@ -246,7 +296,7 @@ assert chat([("system", "s"), ("user", "caf\u00e9 \u6c34")]) == "R\u00e9ponse: \
         self.assertEqual(entry["input_tokens"], 806)
         self.assertEqual(entry["output_tokens"], 8)
         self.assertEqual(entry["num_turns"], 2)
-        self.assertAlmostEqual(entry["total_cost_usd"], 0.01)
+        self.assertAlmostEqual(entry["total_cost_usd"], 2 * PRINT_RESULT["total_cost_usd"])
         self.assertEqual(entry["web_search_requests"], 0)
         self.assertNotIn("service_tier", entry)
 

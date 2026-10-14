@@ -85,15 +85,21 @@ Each item can be, in order of resolution priority:
 
    The name after `cli-` is passed to the client unchanged, so it must be
    an id the client accepts (`claude --model` takes full names); a wrong
-   id fails at the client with its own message. Before the debate starts,
-   each client is asked whether it is signed in; if one is not, nothing
-   runs and the message names the client to sign in to. The client is
-   called as a plain chat engine: the role prompt as its whole system
-   prompt, no tools, no session, no access to your files or settings.
-   `--browse` is not available on this route yet and refuses, naming the
-   engine. Routes mix freely: `--engines cli-claude-fable-5-1,gemini,chatgpt`
-   is a normal debate. One client call may take up to ten minutes
-   (`ROTATED_DEBATE_CLIENT_TIMEOUT` seconds overrides).
+   id fails at the client with its own message. A handle bound with
+   `name=cli-...` still honors `ROTATED_DEBATE_MODEL_<NAME>` like any
+   handle. Before the debate starts, each client is asked whether it is
+   signed in; if one is not, nothing runs and the message names the
+   client to sign in to. The client is called as a plain chat engine: the
+   role prompt as its whole system prompt, no built-in tools, no MCP
+   servers, no saved session, in an empty working directory, with
+   `ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN` removed from its
+   environment so an exported key cannot take over the billing. Managed
+   organization settings, if your client has any, still apply. `--browse`
+   and `--temperature` are not available on this route and refuse, naming
+   the engine. Routes mix freely:
+   `--engines cli-claude-fable-5-1,gemini,chatgpt` is a normal debate. One
+   client call may take up to ten minutes (`ROTATED_DEBATE_CLIENT_TIMEOUT`
+   seconds overrides).
 
 Anything that fits none of these is an error naming the accepted forms.
 A debate needs at least three engines.

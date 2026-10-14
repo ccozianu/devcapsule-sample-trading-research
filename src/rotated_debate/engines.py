@@ -87,11 +87,15 @@ def resolve_model_id(spec: EngineSpec) -> str:
     """Priority: env override > explicit binding > curated alias > name pattern.
 
     A `cli-<model>` item, as the alias or as the binding, resolves to
-    `cli-<client>:<model>`; the typed name is its pin and no alias or
-    environment default applies to it.
+    `cli-<client>:<model>`; the typed name is its pin and no curated alias
+    applies to it. The environment override keeps its documented place: a
+    handle bound with `name=cli-...` is still overridden by
+    `ROTATED_DEBATE_MODEL_<NAME>` when that is set.
     """
     env_override = os.environ.get(ENV_PREFIX + spec.alias.upper())
     if env_override:
+        if clients.is_client_item(env_override):
+            return clients.client_model_id(env_override, infer_provider)
         return env_override
     if spec.provider_model:
         if clients.is_client_item(spec.provider_model):

@@ -59,3 +59,4 @@
 - [UX outline (settled): how debates are invoked](engineering-docs/design-notes/ux-outline.md)
 - [Specification: debate invocation surfaces v0](engineering-docs/specifications/debate-invocation.md)
 - [tests/fixtures/labeled/README.md](tests/fixtures/labeled/README.md)
+- [tests/fixtures/claude-client/README.md](tests/fixtures/claude-client/README.md)
