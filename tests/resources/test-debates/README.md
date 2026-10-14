@@ -37,3 +37,13 @@ Filenames carry the transcript's own `generated_at` timestamp
   disputes surfaced), verdict converged, flash leg cost ~$0.01 on 6.8k
   tokens. Total ~$9.9 — cheaper than the 14:30 run despite the extra
   role (large run-to-run variance in Fable's search volume).
+- `20261014-214924-cli-claude-91-prime-debate.md` — first live run through a
+  command-line client (2026-10-14, cli-engines slice 1): three engines all
+  reached through the signed-in `claude` client, `cli-claude-fable-5-1` /
+  `cli-claude-sonnet-5` / `cli-claude-opus-5`, on a trivial arithmetic
+  question, 3 rotations, 1 round. `state=converged`, zero parse errors,
+  6 reasoned concessions / 0 capitulations, 12 client calls in 3m47s.
+  Usage as the client reports it: 28,360 input tokens (nearly all
+  cache creation), 14,926 output tokens, $0.69 at list
+  price under the subscription (fable-5-1 $0.35, sonnet-5 $0.11, opus-5 $0.23). Implementor validation; the
+  owner's mixed-route acceptance run is still to come.
