@@ -8,7 +8,7 @@ mode.
 
 State: `active; permanent coordination`
 
-Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@426b1fa5ef12
+Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@0d9d6ff8b5cf
 
 Branch prefix: `ws-project-management/`
 
@@ -21,20 +21,20 @@ owner's direction on 2026-10-14; the outbox was retired by definition 0.2.14.
 
 Integration target: `main`
 
-Delivery method: `direct-main` by project-owner decision on 2026-08-21: bring
-the clean branch up to `main`, validate, merge, push normally. Never
-force-push `main`; stop for semantic conflicts or genuine remote divergence.
-Definition 0.2.16.dev0 requires one merge commit per delivery, never a
-fast-forward; the earlier rebase-and-fast-forward wording is superseded by
-that rule, and whether to move to pull requests is the open decision below.
+Delivery method: `pull-request`, reviewed by a second agent pair, by
+project-owner decision on 2026-10-14; see *Delivery And Review* in
+`WORKFLOW-LOCAL.md`. This supersedes the `direct-main` default of 2026-08-21
+for every workstream; each updates its own status file when it next touches
+it. Only the owner merges to `main`, as a merge commit. Never force-push
+`main`.
 
 Branch synchronization: fork from current `main`; rebase while unpublished
 and merge `main` in once the branch is shared.
 
 ## Current Task
 
-Route and record the `cli-engines` workstream, and settle the project-wide
-delivery decision.
+Track `cli-engines` and `portfolio-context` through their design phases; the
+delivery decision is settled and recorded.
 
 Latest action, 2026-10-13: the owner opened `cli-engines` in another checkout
 on `ws-cli-engines/v0` and published it. Its goal is a second engine access
@@ -68,16 +68,23 @@ reorder it.
   pre-adoption branches were deleted on the owner's direction, 2026-10-14.
 - 2026-10-13: the DevCapsule process record was assigned onward to
   `cli-engines`; see the decision log.
+- 2026-10-14: the owner chose pull-request delivery with a second agent
+  pair's review, the loop in the DevCapsule record, over direct-main and
+  over unreviewed pull requests. Reason: the only reviewer under direct-main
+  was the owner reading the diff after the fact; the loop's cost, twenty to
+  forty minutes a round, was judged worth it from the first engine slice
+  on. Recorded under *Delivery And Review* in `WORKFLOW-LOCAL.md`, which is
+  this workstream's deliverable for its next integration.
+- 2026-10-14: the owner directed that `cli-engines` continue in this
+  checkout after the other session's worktree was removed; its claim was
+  taken over.
 
 ## Prioritized Next Work
 
-1. Record the owner's delivery decision: keep `direct-main` with merge
-   commits, or move to pull requests reviewed by a second agent pair as in
-   the DevCapsule record. `cli-engines` asks the same as its open question 6.
-   Done means: the decision is recorded here and, if it departs from the
-   definition, under *Exceptions* in `WORKFLOW-LOCAL.md`; every open
-   workstream's status file names the method that applies to it.
-   Verification: `devcapsule workflow status` shows no row contradicting it.
+1. Deliver this branch's change to `WORKFLOW-LOCAL.md` through the first
+   reviewed pull request, so the delivery rule itself reaches `main`.
+   Done means: the pull request is merged by the owner as a merge commit.
+   Verification: `main` carries *Delivery And Review*.
    Reopen if: a workstream integrates by a method the record does not name.
 2. Complete the design-first `portfolio-context` workstream; then open
    `portfolio debate`, then `sweep`.
@@ -86,7 +93,7 @@ reorder it.
 
 ## Open Threads
 
-- Awaiting the human: the delivery decision above.
+- Awaiting the human: nothing.
 - Weighed and unresolved: fixture subject scope and grading still shape
   R-EVAL-002, sequenced behind the portfolio path on 2026-09-01.
 - Observed, not edited: `devcapsule workflow status` shows an empty branch
@@ -111,6 +118,6 @@ reorder it.
 
 ## Next Resumable Task
 
-Take the owner's delivery decision and record it as item 1 above. Then track
-`portfolio-context` and `cli-engines` through their design phases without
-reordering the portfolio sequence.
+Open the reviewed pull request for this branch once a reviewer pair is set
+up (item 1). Meanwhile track `portfolio-context` and `cli-engines` through
+their design phases without reordering the portfolio sequence.
