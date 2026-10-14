@@ -44,7 +44,8 @@ if log:
         fh.write(json.dumps({
             "argv": sys.argv[1:], "stdin": sys.stdin.read(), "cwd": os.getcwd(),
             "key_vars": sorted(k for k in os.environ
-                               if k in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")),
+                               if k in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN",
+                                        "ANTHROPIC_CUSTOM_HEADERS")),
         }) + "\n")
 if sys.argv[1:3] == ["auth", "status"]:
     with open(os.path.join(fixtures, "auth-status.json"), encoding="utf-8") as fh:
@@ -270,7 +271,12 @@ assert chat([("system", "s"), ("user", "caf\u00e9 \u6c34")]) == "R\u00e9ponse: \
         self.assertIs(chat.workdir.name, chat.workdir.name)
 
     def test_api_key_variables_never_reach_the_client(self) -> None:
-        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-test", "ANTHROPIC_AUTH_TOKEN": "t"}):
+        credentials = {
+            "ANTHROPIC_API_KEY": "sk-test",
+            "ANTHROPIC_AUTH_TOKEN": "t",
+            "ANTHROPIC_CUSTOM_HEADERS": "X-Api-Key: sk-test\nAuthorization: Bearer test",
+        }
+        with patch.dict(os.environ, credentials):
             chat = build_chat_fn("cli-claude:claude-fable-5-1", None, label="x")
             chat([("system", "s"), ("user", "u")])
         calls = self.calls()

@@ -41,10 +41,10 @@ PLANNED_SLICE = {"codex": "slice 2", "antigravity": "slice 3"}
 TIMEOUT_ENV = "ROTATED_DEBATE_CLIENT_TIMEOUT"
 DEFAULT_TIMEOUT = 600.0
 
-# Variables that would let a client bill an API key instead of its sign-in.
-# They are removed from every client subprocess, status check included, so
-# the route is the subscription whatever the parent shell exports.
-KEY_VARIABLES = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")
+# Direct credentials and custom headers that can carry an API key or token.
+# Remove these from both subprocesses. This does not validate credentials
+# supplied by stored client configuration, managed settings or cloud providers.
+KEY_VARIABLES = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_CUSTOM_HEADERS")
 
 Runner = Callable[..., "subprocess.CompletedProcess[str]"]
 
