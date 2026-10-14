@@ -59,6 +59,14 @@ environment."
 
 ## Current Task
 
+Mail taken 2026-10-14: `project-management` forwarded the DevCapsule
+process record as design input; acknowledged, see the decision log. The
+record's suggestions enter the design as follows: the client-backed engine
+kind is this workstream's goal; bounded rounds, attributed assessments and
+"proposals not implemented" shape how reviews of this work are written if
+the owner chooses pull-request delivery; the delivery choice itself is
+question 6.
+
 Design, for the owner's decisions before any implementation. The questions
 are under *Open Questions*. The facts found so far:
 
@@ -117,6 +125,7 @@ one.
 - The binding contract:
   [debate invocation surfaces](../../specifications/debate-invocation.md),
   section 1.
-- The process record from DevCapsule, in `project-management`'s mailbox on
-  the coordination branch until taken:
-  `mail/project-management/2026-10-12-devcapsule-maintenance-implementor-reviewer-process.md`.
+- The process record from DevCapsule, acknowledged 2026-10-14 as design
+  input: it is kept verbatim inside the decision log's entry source,
+  `intake-dispositions.md`, and the original is at `project-management`'s
+  commit `2a03886`. Its open question on delivery is question 6 above.
