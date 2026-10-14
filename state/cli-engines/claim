@@ -1,5 +1,5 @@
-who: Costin Cozianu
+who: unknown
 branch: ws-cli-engines/v0
-slice: Design of the command-line client engines; the owner's six decisions pending; mail taken
-since: 2026-10-14T18:16:55+00:00
-expires: 2026-10-15T06:16:55+00:00
+slice: Design decisions one at a time with the owner, taken over from the removed worktree session
+since: 2026-10-14T20:18:55+00:00
+expires: 2026-10-15T08:18:55+00:00
