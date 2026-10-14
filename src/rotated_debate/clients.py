@@ -202,7 +202,7 @@ def _parse_claude_result(label: str, stdout: str) -> tuple[str, Mapping[str, obj
 
 def claude_usage(report: Mapping[str, object]) -> dict[str, object]:
     """What the client reports, as it reports it: the token fields of `usage`,
-    the call's dollar cost under the subscription, and the turn count. Nested
+    the client's reported dollar estimate, and the turn count. Nested
     details are left to `record_server_tool_use`; nothing is normalized."""
     usage: dict[str, object] = {}
     reported = report.get("usage")

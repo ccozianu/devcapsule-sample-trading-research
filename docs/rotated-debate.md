@@ -126,9 +126,10 @@ rotation's full exchange and synthesis. Frontmatter worth knowing:
   (token counts for all current bindings) plus a `calls` counter, and —
   on browsing runs, where the provider reports it — server-side search
   counts (e.g. `web_search_requests`). A client engine adds what its
-  client reports: for `claude`, `total_cost_usd` as the client prices the
-  calls under the subscription, and `num_turns`. This is where you read
-  what a debate cost.
+  client reports: for `claude`, `total_cost_usd` and `num_turns`.
+  The dollar value is the client's reported estimate, not a measurement of
+  subscription charges or remaining plan allowance. See
+  [Claude Code's cost documentation](https://code.claude.com/docs/en/costs).
 - `outcome_state` — reserves `deterministic_tally` (future) alongside the
   `synthesizer_meta` verdict aggregation and, when
   `--add-last-synthesizer` was used, the `last_synthesizer_verdict` with
