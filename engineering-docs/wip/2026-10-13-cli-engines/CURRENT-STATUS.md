@@ -248,6 +248,9 @@ that were rejected so they are not re-proposed.
 - [Record: review round 1](2026-10-14-record-review-round-1.md), the
   implementor's assessment of every finding and what was merged; read
   when a finding is reopened.
+- [Note: pull-request body](2026-10-14-note-pull-request-body.md), the
+  text the owner pastes when opening the pull request; counts filled in
+  after round 2.
 - The access-route decision this extends:
   [LangChain as the engine access layer](../../decisions/engineering/2026-08-23-langchain-engine-access.md).
 - The binding contract:
