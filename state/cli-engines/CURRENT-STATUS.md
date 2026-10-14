@@ -9,7 +9,7 @@ models reached through API keys. The debate protocol, the transcript and
 the reported state stay as the invocation specification defines them; only
 the access route changes.
 
-State: `active; slice 1 in review, round 2`
+State: `active; slice 1 reviewed twice, awaiting the owner's pull request and acceptance run`
 
 Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@426b1fa5ef12
 
@@ -111,8 +111,13 @@ commit after it; see the
 four fixes merged from the reviewer, four resolved by the implementor (key
 variables scrubbed from the client's environment, client run in an empty
 directory with MCP off, override rule stated, fixtures recorded), one
-noted. Gate after the round: 71 tests, compile and lint clean. Round 2 asks
-the reviewer to verify those resolutions only.
+noted. Round 2 done the same day, merged as `8fc86e2`, resolved in
+`d072244`; see the [round-2 record](2026-10-14-record-review-round-2.md):
+four items verified, the reviewer's custom-header scrub merged, the sign-in
+check tightened to the method the client reports, cloud route selectors
+scrubbed, a `TMPDIR` under a project refused. Gate after round 2: 74 tests,
+compile and lint clean. Two rounds run of the three allowed; the remaining
+proposals are documented limits.
 
 Pull request: the GitHub CLI is not installed in the capsule and no token
 is present, so the pull request against `main` is opened by the owner
@@ -169,10 +174,14 @@ are under *Open Questions*. The facts found so far:
   providers are touched, and `resolve_model_id` is the alias resolution the
   specification binds.
 
-Next resumable task: review round 2, confined to the round-1
-resolutions; assess, merge or push back; rerun the gate on the merged
-branch; hand the pull request to the owner with the counts; then the
-owner's mixed-route acceptance run. The original scope, for the
+Next resumable task: the owner opens the pull request from the pushed
+branch with the body in the
+[pull-request note](2026-10-14-note-pull-request-body.md), and runs the
+mixed-route acceptance (`cli-claude-fable-5-1,gemini,chatgpt`) in a
+terminal that holds the API keys; the transcript is retained under
+`tests/resources/test-debates/` and the work order's finish criteria are
+checked against it. Then the owner merges as a merge commit. Slice 2, the
+`codex` client, gets its own work order afterwards. The original scope, for the
 record: in `engines.py`, recognize a `cli-<model>`
 item, infer the vendor from the model name, build a `ChatFn` that runs the
 vendor's client as a chat engine (for `claude`: `-p`, JSON output, the
@@ -230,8 +239,11 @@ that were rejected so they are not re-proposed.
 ## Open Threads
 
 - Awaiting the human: opening the pull request from the pushed branch,
-  and the mixed-route acceptance run (`cli-claude-fable-5-1,gemini,chatgpt`)
-  with the API keys only the owner holds.
+  the mixed-route acceptance run (`cli-claude-fable-5-1,gemini,chatgpt`)
+  with the API keys only the owner holds, and the merge.
+- Weighed and unresolved: whether to install and sign in the GitHub CLI
+  in the capsule so the implementor can open pull requests itself; left
+  to the owner, since the sign-in is theirs.
 - Weighed and unresolved: nothing; the six questions are decided above.
 - Deliberately not preserved: the chat in which the questions were asked.
 
@@ -248,6 +260,11 @@ that were rejected so they are not re-proposed.
 - [Record: review round 1](2026-10-14-record-review-round-1.md), the
   implementor's assessment of every finding and what was merged; read
   when a finding is reopened.
+- [Record: review round 2](2026-10-14-record-review-round-2.md), the
+  verification of the round-1 resolutions and the remaining limits.
+- [Note: pull-request body](2026-10-14-note-pull-request-body.md), the
+  text the owner pastes when opening the pull request; counts filled in
+  after round 2 (done).
 - The access-route decision this extends:
   [LangChain as the engine access layer](../../decisions/engineering/2026-08-23-langchain-engine-access.md).
 - The binding contract:
