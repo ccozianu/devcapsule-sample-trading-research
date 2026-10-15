@@ -136,6 +136,10 @@ Each item can be, in order of resolution priority:
      a floor on visible browsing evidence: a fetched answer may cite none,
      so zero does not establish that browsing was absent. Repeated links
      count again; this is neither a search count nor a unique-source count.
+     Ordinary state files under the private home are removed with it. The
+     sign-in token is a writable symlink: an in-place refresh can update
+     the original token. The private home redirects configuration; it is
+     not a filesystem isolation boundary.
 
    Managed organization settings, if a client has any, still apply. If
    `TMPDIR` points inside a project, the engine refuses rather than let a

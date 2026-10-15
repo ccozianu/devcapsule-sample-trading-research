@@ -556,7 +556,12 @@ def antigravity_home(workdir: str) -> Path:
     """A private home for the call: the client's config directory holding a
     link to the real sign-in token and `ANTIGRAVITY_SETTINGS`. Probed: the
     sign-in held through the link and the settings were honored. The client
-    writes its own state files here; they die with the directory."""
+    writes its ordinary state files here; they die with the directory.
+    The token link is writable: an in-place token refresh reaches the real
+    file. This redirects configuration, not filesystem access. A missing
+    real token leaves a dangling link; authentication failure is reported
+    by the client, not checked here.
+    """
     real_config = Path.home().joinpath(*ANTIGRAVITY_CONFIG_DIR)
     home = Path(workdir) / "antigravity-home"
     config = home.joinpath(*ANTIGRAVITY_CONFIG_DIR)
