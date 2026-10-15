@@ -72,3 +72,17 @@ Filenames carry the transcript's own `generated_at` timestamp
   antigravity 78.1k input / 27.6k output with 17.2k thinking. Also the first
   run after codex's tools were switched off in full: the first attempt was
   rejected by the tool guard when the codex critic searched the web.
+- `20261015-130351-NEM-gold-debasement-cli-browse-debate.md` — the same NEM
+  proposition, same three clients, with browsing on by default (2026-10-15,
+  first run after the browsing change), 3 rotations, 1 round, 20m26s.
+  `state=diverged` again: two synthesizers converged, the codex one
+  diverged; 17 reasoned concessions / 0 capitulations, zero parse errors.
+  Browsing evidence as recorded: claude 22 web searches over 31 turns at
+  $2.87 estimated; codex 7 search items (169.3k input tokens); antigravity
+  128.0k input tokens and zero grounding links, the evidence floor at work
+  (fetched pages cite nothing). What the live data changed: the engines
+  now argue from an October 2026 tape, with NEM's all-time high placed at
+  $135.29 in August and gold about 26% off a January high near $5,589, so
+  the question became whether the stock regains a recent peak while the
+  debasement trade has been losing for nine months. The no-browse run of
+  the morning argued from a 2022 baseline. Compare the two.
