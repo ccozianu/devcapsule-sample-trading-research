@@ -223,7 +223,8 @@ def antigravity_model_ids(listing: str) -> list[str]:
 def _antigravity_candidates(model: str) -> list[str]:
     if model.endswith(tuple(f"-{effort}" for effort in ANTIGRAVITY_EFFORTS)):
         return [model]
-    return [f"{model}-{effort}" for effort in ANTIGRAVITY_EFFORTS]
+    # Match the exact id or the effort the command will actually request.
+    return [model, f"{model}-{ANTIGRAVITY_DEFAULT_EFFORT}"]
 
 
 def _check_antigravity_signed_in(executable: str, model: str, run: Runner) -> None:
@@ -376,20 +377,21 @@ def codex_command(executable: str, model: str, workdir: str, instructions: str) 
 
 
 def _parse_codex_events(label: str, stdout: str) -> tuple[str, dict[str, object]]:
-    """Events: `item.completed` with an `agent_message` carries the text,
-    `turn.completed` carries usage; an `error` event is a failure."""
+    """Use the last agent message only after a completed turn. Malformed
+    events and explicit failures invalidate the response, even after text."""
     text: str | None = None
     usage: dict[str, object] = {}
+    turn_completed = False
     for line in stdout.splitlines():
         line = line.strip()
         if not line:
             continue
         try:
             event = json.loads(line)
-        except json.JSONDecodeError:
-            continue
+        except json.JSONDecodeError as exc:
+            raise RuntimeError(f"{label}: the codex client returned an invalid JSON event") from exc
         if not isinstance(event, Mapping):
-            continue
+            raise RuntimeError(f"{label}: the codex client returned a non-object event")
         kind = event.get("type")
         if kind == "item.completed":
             item = event.get("item")
@@ -397,18 +399,21 @@ def _parse_codex_events(label: str, stdout: str) -> tuple[str, dict[str, object]
                 if isinstance(item.get("text"), str):
                     text = item["text"]
         elif kind == "turn.completed":
+            turn_completed = True
             reported = event.get("usage")
             if isinstance(reported, Mapping):
                 usage.update(reported)
-        elif kind == "error":
+        elif kind in ("error", "turn.failed"):
             raise RuntimeError(
                 f"{label}: the codex client reported an error: "
-                f"{str(event.get('message', event))[:500]}"
+                f"{str(event.get('message', event.get('error', event)))[:500]}"
             )
     if text is None:
         raise RuntimeError(
             f"{label}: the codex client produced no agent message: {stdout[-300:]!r}"
         )
+    if not turn_completed:
+        raise RuntimeError(f"{label}: the codex client produced no turn.completed event")
     return text, usage
 
 
