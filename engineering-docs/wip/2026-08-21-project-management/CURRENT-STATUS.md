@@ -94,8 +94,10 @@ reorder it.
 
 ## Prioritized Next Work
 
-1. Deliver this branch's change to `WORKFLOW-LOCAL.md` through the first
-   reviewed pull request, so the delivery rule itself reaches `main`.
+1. Deliver this branch's change to `WORKFLOW-LOCAL.md` through pull
+   request #3, opened 2026-10-15, so the delivery rule itself reaches
+   `main`. Whether a reviewer pair reads a records-only pull request is
+   the owner's call.
    Done means: the pull request is merged by the owner as a merge commit.
    Verification: `main` carries *Delivery And Review*.
    Reopen if: a workstream integrates by a method the record does not name.
@@ -134,6 +136,6 @@ reorder it.
 
 ## Next Resumable Task
 
-Open the reviewed pull request for this branch once a reviewer pair is set
-up (item 1). Meanwhile track `portfolio-context` and `cli-engines` through
-their design phases without reordering the portfolio sequence.
+Pull request #3 is open for this branch (item 1); the owner merges it.
+Meanwhile track `portfolio-context` and `cli-engines` without reordering
+the portfolio sequence.
