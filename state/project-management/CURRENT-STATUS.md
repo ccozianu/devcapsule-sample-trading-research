@@ -78,6 +78,19 @@ reorder it.
 - 2026-10-14: the owner directed that `cli-engines` continue in this
   checkout after the other session's worktree was removed; its claim was
   taken over.
+- 2026-10-15: at the owner's direction, sent DevCapsule's
+  `project-management` a capability request for a signed-in GitHub CLI in
+  the capsule, by mail on that repository's coordination branch (item
+  `2026-10-15-trading-research-project-management-github-cli-capability.md`,
+  delivered at `bddec8f` there), with two observations attached: codex's
+  sandbox cannot run inside the capsule, and codex reads its home
+  `AGENTS.md` regardless of switches. The need is recorded under *Host
+  Capabilities* in `WORKFLOW-LOCAL.md`. Found on sending: DevCapsule's own
+  `project-management` had already routed "the GitHub CLI as a component"
+  to its `component-catalog` workstream on 2026-10-09, naming the sign-in
+  design as the real work; our item is corroboration from a project that
+  ran the reviewer loop without it. Where it stands is read from that
+  repository's coordination branch and decision logs.
 
 ## Prioritized Next Work
 
@@ -96,6 +109,9 @@ reorder it.
 - Awaiting the human: nothing.
 - Weighed and unresolved: fixture subject scope and grading still shape
   R-EVAL-002, sequenced behind the portfolio path on 2026-09-01.
+- Observed, not ours to act on: DevCapsule's GitHub CLI component is in
+  its `component-catalog` queue since 2026-10-09; until it ships, pull
+  requests here are opened and merged by the owner by hand.
 - Observed, not edited: `devcapsule workflow status` shows an empty branch
   column for `cli-engines`; its status file says `Initial branch:` where the
   tool reads a `Branch association:` line. That workstream's own record to fix.
