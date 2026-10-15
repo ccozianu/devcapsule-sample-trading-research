@@ -9,7 +9,7 @@ models reached through API keys. The debate protocol, the transcript and
 the reported state stay as the invocation specification defines them; only
 the access route changes.
 
-State: `active; slices 1 to 3 implemented and reviewed, awaiting the owner's pull requests`
+State: `active; pull requests #1 and #2 open, awaiting the owner's acceptance run and merges`
 
 Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@426b1fa5ef12
 
@@ -219,11 +219,16 @@ are under *Open Questions*. The facts found so far:
   providers are touched, and `resolve_model_id` is the alias resolution the
   specification binds.
 
-Next resumable task: the owner opens two pull requests, slice 1 from
-`ws-cli-engines/v0` and slices 2 and 3 from `ws-cli-engines/v0-clients`
-stacked on it, with the bodies in the two pull-request notes; runs the
-slice-1 acceptance debate; merges both as merge commits. For slice 1,
-the body is in the
+Next resumable task: the owner runs the slice-1 acceptance debate
+(`cli-claude-fable-5-1,gemini,chatgpt`, keys in the owner's terminal),
+retains the transcript, merges pull request #1 as a merge commit,
+retargets #2 to `main`, and merges it the same way. Pull requests opened
+by the implementor on 2026-10-15 with the GitHub CLI the owner installed
+in the capsule (conda environment `gh`, signed in as the owner): #1 slice
+1, `ws-cli-engines/v0` → `main`; #2 slices 2 and 3,
+`ws-cli-engines/v0-clients` → `ws-cli-engines/v0`. Each carries the
+reviewer's reports and the implementor's assessments as comments labeled
+by pair. For slice 1, the body was the
 [pull-request note](2026-10-14-note-pull-request-body.md), and runs the
 mixed-route acceptance (`cli-claude-fable-5-1,gemini,chatgpt`) in a
 terminal that holds the API keys; the transcript is retained under
@@ -286,10 +291,10 @@ that were rejected so they are not re-proposed.
 
 ## Open Threads
 
-- Awaiting the human: opening both pull requests from the pushed
-  branches, the mixed-route acceptance run for slice 1
+- Awaiting the human: the mixed-route acceptance run for slice 1
   (`cli-claude-fable-5-1,gemini,chatgpt`) with the API keys only the owner
-  holds, and the merges.
+  holds; the merge of #1 as a merge commit; retargeting #2 to `main` and
+  merging it the same way.
 - Weighed and unresolved: whether to install and sign in the GitHub CLI
   in the capsule so the implementor can open pull requests itself; left
   to the owner, since the sign-in is theirs.
