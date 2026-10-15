@@ -9,13 +9,13 @@ models reached through API keys. The debate protocol, the transcript and
 the reported state stay as the invocation specification defines them; only
 the access route changes.
 
-State: `active; slice 1 reviewed twice, awaiting the owner's pull request and acceptance run`
+State: `active; slice 1 awaiting the owner's pull request; slices 2 and 3 implemented, in review`
 
 Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@426b1fa5ef12
 
 Branch prefix: `ws-cli-engines/`
 
-Branch association: `ws-cli-engines/v0`
+Branch association: `ws-cli-engines/v0-clients`
 
 Integration target: `main`
 
@@ -61,9 +61,43 @@ environment."
 
 ## Current Task
 
+Slices 2 and 3, the `codex` and `antigravity` clients, pulled forward by
+the owner on 2026-10-15 ("I expect the program to select the default CLI
+for that model") under their
+[work order](../../work-orders/2026-10-15-cli-engines-slices-2-3-codex-antigravity.md),
+implemented the same day on `ws-cli-engines/v0-clients`, stacked on the
+slice-1 branch, commit `b2d488b`, and in review.
+
+Probed on this capsule first: `codex exec` takes the prompt on stdin and
+a replacement instructions file (9,345 input tokens against 14,283
+without); `antigravity` takes the prompt on stdin, has no instruction flag,
+requires an effort level for a bare id, and lists its models. Fixtures
+recorded under `tests/fixtures/codex-client/` and
+`tests/fixtures/antigravity-client/`. Gate: 89 tests (74 after slice 1),
+compile and lint clean. Acceptance evidence: one real debate across all
+three clients, retained as
+`tests/resources/test-debates/20261015-074404-cli-three-clients-91-prime-debate.md`,
+`state=converged`, zero parse errors, 12 calls, usage recorded per client.
+
+Judgments taken in slices 2 and 3, for the owner's review:
+
+- `antigravity` gets `--effort high` when the id carries no effort
+  suffix, so `cli-gemini-3.8-flash` works as typed; the transcript records
+  the id as typed, the effort is in the command line.
+- An id `antigravity` does not list is refused before any call, with the
+  list, because that client also serves Claude and GPT-OSS models.
+- `codex`'s system prompt goes through `model_instructions_file`, written
+  into the engine's empty directory before each call; `antigravity`'s is
+  prepended to the prompt, since it has no instruction flag.
+- A key-based sign-in refuses on every client: `claude` by auth method,
+  `codex` by the "Logged in using ChatGPT" line, `antigravity` by a
+  non-zero or empty `models` listing.
+
+Slice 1 below, awaiting the owner's pull request.
+
 Slice 1, the `claude` client engine, implemented on 2026-10-14 under the
 [work order](../../work-orders/2026-10-14-cli-engines-slice-1-claude-client.md)
-and in review.
+and reviewed twice.
 
 What landed on the branch, commit `36b026d`: `clients.py`, new, the client
 route; `engines.py` dispatches `cli-<model>` items to it and widens the
@@ -174,8 +208,10 @@ are under *Open Questions*. The facts found so far:
   providers are touched, and `resolve_model_id` is the alias resolution the
   specification binds.
 
-Next resumable task: the owner opens the pull request from the pushed
-branch with the body in the
+Next resumable task: finish the review round of slices 2 and 3, record
+it, and hand the stacked pull request to the owner; then, for slice 1,
+the owner opens the pull request from the pushed branch with the body in
+the
 [pull-request note](2026-10-14-note-pull-request-body.md), and runs the
 mixed-route acceptance (`cli-claude-fable-5-1,gemini,chatgpt`) in a
 terminal that holds the API keys; the transcript is retained under
@@ -256,7 +292,9 @@ that were rejected so they are not re-proposed.
 
 - `intake/`: empty; `intake-dispositions.md` holds the decision log.
 - [Work order: slice 1, the `claude` client](../../work-orders/2026-10-14-cli-engines-slice-1-claude-client.md),
-  the scope and finish criteria of the current task; open until merged.
+  the scope and finish criteria; open until merged.
+- [Work order: slices 2 and 3, the `codex` and `antigravity` clients](../../work-orders/2026-10-15-cli-engines-slices-2-3-codex-antigravity.md),
+  the current task's scope and finish criteria; open until merged.
 - [Record: review round 1](2026-10-14-record-review-round-1.md), the
   implementor's assessment of every finding and what was merged; read
   when a finding is reopened.
