@@ -37,8 +37,15 @@ gate; the user documentation. Specific to each:
   prepended to the prompt; an id without an effort suffix gets `--effort
   high`; an id the client does not list is refused with the list.
 
-Out of scope: browsing through any client, agentic use, and any change to
-the protocol, prompts, parsing or transcript layout.
+Out of scope: agentic use, and any change to the protocol, prompts,
+parsing or transcript layout.
+
+Addendum, 2026-10-15, owner direction after the browsing research:
+browsing through the clients is in scope and on by default, each client
+through its own switch (`claude` web tools allowed, `codex`
+`web_search="live"`, `antigravity` grounding plus URL reads), with the
+evidence each client can give recorded as usage. The command-line switch
+to turn client browsing off is a separate, later slice.
 
 ## Validation
 
