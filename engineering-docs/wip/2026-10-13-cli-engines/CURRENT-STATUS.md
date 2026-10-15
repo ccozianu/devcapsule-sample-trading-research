@@ -9,7 +9,7 @@ models reached through API keys. The debate protocol, the transcript and
 the reported state stay as the invocation specification defines them; only
 the access route changes.
 
-State: `active; slice 1 awaiting the owner's pull request; slices 2 and 3 implemented, in review`
+State: `active; slices 1 to 3 implemented and reviewed, awaiting the owner's pull requests`
 
 Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@426b1fa5ef12
 
@@ -66,7 +66,13 @@ the owner on 2026-10-15 ("I expect the program to select the default CLI
 for that model") under their
 [work order](../../work-orders/2026-10-15-cli-engines-slices-2-3-codex-antigravity.md),
 implemented the same day on `ws-cli-engines/v0-clients`, stacked on the
-slice-1 branch, commit `b2d488b`, and in review.
+slice-1 branch, commit `b2d488b`, reviewed once (merged as `ffb9fba`,
+resolved in `8afa46f`; see the
+[round-3 record](2026-10-15-record-review-round-3.md)): two reviewer
+fixes merged (strict codex stream parsing, antigravity effort matching),
+two findings resolved (a private `CODEX_HOME` because the client reads
+its home's `AGENTS.md` whatever the switches say; tool items fail the
+call; antigravity's sign-in wording made honest). Gate: 98 tests.
 
 Probed on this capsule first: `codex exec` takes the prompt on stdin and
 a replacement instructions file (9,345 input tokens against 14,283
@@ -89,9 +95,14 @@ Judgments taken in slices 2 and 3, for the owner's review:
 - `codex`'s system prompt goes through `model_instructions_file`, written
   into the engine's empty directory before each call; `antigravity`'s is
   prepended to the prompt, since it has no instruction flag.
-- A key-based sign-in refuses on every client: `claude` by auth method,
-  `codex` by the "Logged in using ChatGPT" line, `antigravity` by a
-  non-zero or empty `models` listing.
+- A key-based sign-in refuses on `claude` (auth method) and `codex` (the
+  "Logged in using ChatGPT" line); `antigravity` reports no method, so
+  its listing establishes sign-in only, and the guide says so.
+- `codex` runs with a private home under the engine's directory holding
+  one symlink to the real `auth.json`: measured, nothing else stops the
+  client reading its home's `AGENTS.md`. Any tool item in its event
+  stream fails the call. Antigravity has no tools-off switch; its
+  `num_turns` is the evidence.
 
 Slice 1 below, awaiting the owner's pull request.
 
@@ -208,10 +219,11 @@ are under *Open Questions*. The facts found so far:
   providers are touched, and `resolve_model_id` is the alias resolution the
   specification binds.
 
-Next resumable task: finish the review round of slices 2 and 3, record
-it, and hand the stacked pull request to the owner; then, for slice 1,
-the owner opens the pull request from the pushed branch with the body in
-the
+Next resumable task: the owner opens two pull requests, slice 1 from
+`ws-cli-engines/v0` and slices 2 and 3 from `ws-cli-engines/v0-clients`
+stacked on it, with the bodies in the two pull-request notes; runs the
+slice-1 acceptance debate; merges both as merge commits. For slice 1,
+the body is in the
 [pull-request note](2026-10-14-note-pull-request-body.md), and runs the
 mixed-route acceptance (`cli-claude-fable-5-1,gemini,chatgpt`) in a
 terminal that holds the API keys; the transcript is retained under
@@ -274,9 +286,10 @@ that were rejected so they are not re-proposed.
 
 ## Open Threads
 
-- Awaiting the human: opening the pull request from the pushed branch,
-  the mixed-route acceptance run (`cli-claude-fable-5-1,gemini,chatgpt`)
-  with the API keys only the owner holds, and the merge.
+- Awaiting the human: opening both pull requests from the pushed
+  branches, the mixed-route acceptance run for slice 1
+  (`cli-claude-fable-5-1,gemini,chatgpt`) with the API keys only the owner
+  holds, and the merges.
 - Weighed and unresolved: whether to install and sign in the GitHub CLI
   in the capsule so the implementor can open pull requests itself; left
   to the owner, since the sign-in is theirs.
@@ -300,9 +313,12 @@ that were rejected so they are not re-proposed.
   when a finding is reopened.
 - [Record: review round 2](2026-10-14-record-review-round-2.md), the
   verification of the round-1 resolutions and the remaining limits.
-- [Note: pull-request body](2026-10-14-note-pull-request-body.md), the
-  text the owner pastes when opening the pull request; counts filled in
-  after round 2 (done).
+- [Note: pull-request body, slice 1](2026-10-14-note-pull-request-body.md),
+  the text the owner pastes when opening that pull request.
+- [Note: pull-request body, slices 2 and 3](2026-10-15-note-pull-request-body-clients.md),
+  the text for the stacked pull request.
+- [Record: review round 3](2026-10-15-record-review-round-3.md), the
+  assessment of the slices 2 and 3 review.
 - The access-route decision this extends:
   [LangChain as the engine access layer](../../decisions/engineering/2026-08-23-langchain-engine-access.md).
 - The binding contract:
