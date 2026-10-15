@@ -26,6 +26,14 @@ Three clients, one per vendor, probed on 2026-10-14 and 2026-10-15:
 Each runs in an empty directory of its own, with the vendors' key
 variables removed from its environment, after its own sign-in report has
 been checked.
+
+Browsing is on by default on this route (owner direction 2026-10-15; a
+later slice adds the switch to turn it off): `claude` with its WebSearch
+and WebFetch tools allowed, `codex` with `web_search="live"`, and
+`antigravity` through the Google Search grounding its account setting
+enables, plus URL reads. Each client's evidence of browsing is recorded as
+usage: search counts where the client reports them, grounding links
+counted in the answer where it does not.
 """
 
 from __future__ import annotations
@@ -81,25 +89,49 @@ CODEX_SIGNED_IN = "Logged in using ChatGPT"
 # Antigravity model ids end in their effort level; one is added otherwise.
 ANTIGRAVITY_EFFORTS = ("low", "medium", "high")
 ANTIGRAVITY_DEFAULT_EFFORT = "high"
+# Antigravity's settings and sign-in token live at a fixed path under the
+# home directory; the call runs with a private home holding a link to the
+# token and these settings, so the owner's own permissions (which may allow
+# every tool unprompted) never reach the engine. Google Search grounding is
+# a model-side feature governed by an account-level setting, not by these
+# permissions: a deny-everything file still produced grounded answers. URL
+# reads are allowed so the model can open what it finds. `always-proceed`
+# with a deny list is the mode that works headless: under `strict` the
+# client auto-denied the URL read despite the allow rule and returned an
+# empty answer, while the deny list held under `always-proceed` (a shell
+# command was refused with the model saying so).
+ANTIGRAVITY_SETTINGS = {
+    "toolPermission": "always-proceed",
+    "permissions": {
+        "allow": ["read_url(*)"],
+        "deny": ["command(*)", "execute_url(*)", "mcp(*)", "write_file(*)"],
+    },
+    "trustedWorkspaces": [],
+}
+ANTIGRAVITY_CONFIG_DIR = (".gemini", "antigravity-cli")
+ANTIGRAVITY_TOKEN_FILE = "antigravity-oauth-token"
+# A grounded answer cites Google's grounding redirect service; counting the
+# links is the only browsing evidence this client gives.
+ANTIGRAVITY_GROUNDING_MARKER = "vertexaisearch.cloud.google.com/grounding-api-redirect"
 # Files whose presence in an ancestor directory means a client would load
 # instructions from there; the empty working directory must have none.
 INSTRUCTION_MARKERS = ("CLAUDE.md", ".claude", "AGENTS.md", ".codex")
-# Codex event items that are not the model talking: a tool was used. The
-# engine is a plain chat engine, so any of these fails the call rather than
-# letting a tool-assisted answer pass as a chat answer.
-CODEX_TALK_ITEMS = {"agent_message", "reasoning"}
+# Codex event items the engine accepts: the model talking, and the hosted
+# web search it is allowed. Any other item is a tool the engine did not
+# grant, and fails the call rather than letting a tool-assisted answer pass
+# as a chat answer.
+CODEX_TALK_ITEMS = {"agent_message", "reasoning", "web_search"}
 CODEX_HOME_ENV = "CODEX_HOME"
-# Codex configuration that leaves the model no tool at all, probed on
-# 2026-10-15 against 0.153.4: `web_search="disabled"` turns the hosted search
-# off (`tools.web_search=false` does not: a live debate was rejected by the
-# tool guard when the critic searched); with it off the model reached for the
-# built-in apps MCP server (`codex_apps search_service.web_run`), so the
-# feature switches below remove that and every other built-in tool,
-# including the shell. With these, a prompt demanding a web search gets
-# "I don't have web access", a prompt asking to list files gets no command,
-# and the prompt shrinks from about 9,400 to about 4,600 input tokens.
-CODEX_TOOLS_OFF = (
-    'web_search="disabled"',
+# Codex configuration, probed on 2026-10-15 against 0.153.4: `web_search`
+# takes `disabled`, `cached` (the default, an OpenAI-maintained index),
+# `indexed` or `live`; `live` is unrestricted retrieval and is what browsing
+# means here. `tools.web_search=false` does nothing. The feature switches
+# remove every built-in tool, the shell and the built-in apps MCP server
+# included (with the search off, the model reached for that server), so the
+# only tool left is the search. The prompt shrinks from about 9,400 to
+# about 4,600 input tokens without the tool descriptions.
+CODEX_SETTINGS = (
+    'web_search="live"',
     "features.apps=false",
     "features.browser_use=false",
     "features.browser_use_external=false",
@@ -313,12 +345,15 @@ def _instruction_free_directory() -> tempfile.TemporaryDirectory[str]:
 
 
 def claude_command(executable: str, model: str, system_prompt: str) -> list[str]:
-    """The exact call, probed against claude 2.1.261 on 2026-10-14.
+    """The exact call, probed against claude 2.1.261 on 2026-10-14 and 15.
 
     The prompt travels on stdin so a large context packet never hits the
     argument-length limit. `--system-prompt` replaces the client's own agent
-    prompt (about 20,000 tokens otherwise); `--tools ""` leaves it no
-    built-in tools and `--strict-mcp-config` with no `--mcp-config` leaves it
+    prompt (about 20,000 tokens otherwise); `--tools "WebSearch,WebFetch"`
+    leaves it exactly its two web tools and `--allowedTools` the same two
+    lets them run without a permission prompt, which print mode cannot
+    answer (named in `--tools` alone, the model reported the permission as
+    not granted); `--strict-mcp-config` with no `--mcp-config` leaves it
     no MCP servers; `--setting-sources ""` ignores the user, project and
     local settings files; `--no-session-persistence` saves no session. The
     call also runs in an empty working directory with no instruction files
@@ -339,7 +374,9 @@ def claude_command(executable: str, model: str, system_prompt: str) -> list[str]
         "--system-prompt",
         system_prompt,
         "--tools",
-        "",
+        "WebSearch,WebFetch",
+        "--allowedTools",
+        "WebSearch,WebFetch",
         "--no-session-persistence",
         "--setting-sources",
         "",
@@ -362,15 +399,25 @@ def _parse_claude_result(label: str, stdout: str) -> tuple[str, dict[str, object
 
 def claude_usage(report: Mapping[str, object]) -> dict[str, object]:
     """What the client reports, as it reports it: the token fields of `usage`,
-    the client's reported dollar estimate, and the turn count. Nested
-    details are left to `record_server_tool_use`; nothing is normalized."""
+    the client's reported dollar estimate, the turn count, and the web
+    searches summed from `modelUsage` (the client's WebSearch tool is not
+    the server-side search, so `usage.server_tool_use` stays at zero for
+    it). Fetches have no counter; the turn count is their trace."""
     usage: dict[str, object] = {}
     reported = report.get("usage")
     if isinstance(reported, Mapping):
         usage.update(reported)
+        usage.pop("server_tool_use", None)
     for key in ("total_cost_usd", "num_turns"):
         if key in report:
             usage[key] = report[key]
+    per_model = report.get("modelUsage")
+    if isinstance(per_model, Mapping):
+        searches = 0
+        for entry in per_model.values():
+            if isinstance(entry, Mapping) and isinstance(entry.get("webSearchRequests"), int):
+                searches += entry["webSearchRequests"]
+        usage["web_search_requests"] = searches
     return usage
 
 
@@ -385,9 +432,9 @@ def codex_command(executable: str, model: str, workdir: str, instructions: str) 
     the empty working directory and `--skip-git-repo-check` lets it run
     there; `-s read-only` is the tightest sandbox the client offers, and the
     directory is empty anyway; `--ephemeral` persists no session;
-    `--ignore-rules` loads no execution-policy rules; `CODEX_TOOLS_OFF`
-    removes the hosted web search and every built-in tool, the shell
-    included; `model_instructions_file` replaces the
+    `--ignore-rules` loads no execution-policy rules; `CODEX_SETTINGS`
+    turns the hosted web search to live and removes every built-in tool,
+    the shell included; `model_instructions_file` replaces the
     client's built-in instructions with the engine's system prompt (measured
     9,345 input tokens against 14,283 without, on this version). The client
     still reads `AGENTS.md` from its home directory whatever these say
@@ -412,7 +459,7 @@ def codex_command(executable: str, model: str, workdir: str, instructions: str) 
         "-c",
         f"model_instructions_file={instructions}",
     ]
-    for setting in CODEX_TOOLS_OFF:
+    for setting in CODEX_SETTINGS:
         command += ["-c", setting]
     return command + ["-"]
 
@@ -434,10 +481,12 @@ def codex_home(workdir: str) -> Path:
 
 def _parse_codex_events(label: str, stdout: str) -> tuple[str, dict[str, object]]:
     """Use the last agent message only after a completed turn. Malformed
-    events and explicit failures invalidate the response, even after text."""
+    events and explicit failures invalidate the response, even after text.
+    Each `web_search` item is counted as the browsing evidence."""
     text: str | None = None
     usage: dict[str, object] = {}
     turn_completed = False
+    searches = 0
     for line in stdout.splitlines():
         line = line.strip()
         if not line:
@@ -459,6 +508,8 @@ def _parse_codex_events(label: str, stdout: str) -> tuple[str, dict[str, object]
                 )
             if item_type == "agent_message" and isinstance(item.get("text"), str):
                 text = item["text"]
+            elif item_type == "web_search":
+                searches += 1
         elif kind == "turn.completed":
             turn_completed = True
             reported = event.get("usage")
@@ -475,6 +526,7 @@ def _parse_codex_events(label: str, stdout: str) -> tuple[str, dict[str, object]
         )
     if not turn_completed:
         raise RuntimeError(f"{label}: the codex client produced no turn.completed event")
+    usage["web_search_requests"] = searches
     return text, usage
 
 
@@ -490,7 +542,8 @@ def antigravity_command(executable: str, model: str) -> list[str]:
     an id without an effort suffix gets `--effort high`, since the client
     requires one. There is no instruction flag: the system prompt is
     prepended to the prompt, separated by a blank line, and the client's
-    own agent prompt (about 14,600 tokens on this version) stays.
+    own agent prompt (about 14,600 tokens on this version) stays. The call
+    runs with `HOME` set to a private home; see `antigravity_home`.
     """
     command = [executable, "--output-format", "json", "--model", model, "--sandbox"]
     if _antigravity_candidates(model) != [model]:
@@ -498,7 +551,26 @@ def antigravity_command(executable: str, model: str) -> list[str]:
     return command
 
 
-def _parse_antigravity_result(label: str, stdout: str) -> tuple[str, dict[str, object]]:
+def antigravity_home(workdir: str) -> Path:
+    """A private home for the call: the client's config directory holding a
+    link to the real sign-in token and `ANTIGRAVITY_SETTINGS`. Probed: the
+    sign-in held through the link and the settings were honored. The client
+    writes its own state files here; they die with the directory."""
+    real_config = Path.home().joinpath(*ANTIGRAVITY_CONFIG_DIR)
+    home = Path(workdir) / "antigravity-home"
+    config = home.joinpath(*ANTIGRAVITY_CONFIG_DIR)
+    if not config.exists():
+        config.mkdir(parents=True)
+        (config / ANTIGRAVITY_TOKEN_FILE).symlink_to(real_config / ANTIGRAVITY_TOKEN_FILE)
+        (config / "settings.json").write_text(
+            json.dumps(ANTIGRAVITY_SETTINGS, indent=2) + "\n", encoding="utf-8"
+        )
+    return home
+
+
+def _parse_antigravity_result(
+    label: str, stdout: str, stderr: str = ""
+) -> tuple[str, dict[str, object]]:
     report = _load_json_object(label, "antigravity", stdout)
     if report.get("status") != "SUCCESS":
         raise RuntimeError(
@@ -506,14 +578,20 @@ def _parse_antigravity_result(label: str, stdout: str) -> tuple[str, dict[str, o
             f"{str(report.get('error', ''))[:500]}"
         )
     text = report.get("response")
-    if not isinstance(text, str):
-        raise RuntimeError(f"{label}: the antigravity client returned no response text")
+    if not isinstance(text, str) or not text.strip():
+        # The client reports SUCCESS with an empty response when a tool it
+        # needed was auto-denied; the reason is on stderr.
+        raise RuntimeError(
+            f"{label}: the antigravity client returned no response text; "
+            f"stderr: {stderr.strip()[-400:]!r}"
+        )
     usage: dict[str, object] = {}
     reported = report.get("usage")
     if isinstance(reported, Mapping):
         usage.update(reported)
     if "num_turns" in report:
         usage["num_turns"] = report["num_turns"]
+    usage["grounding_links"] = text.count(ANTIGRAVITY_GROUNDING_MARKER)
     return text, usage
 
 
@@ -540,7 +618,7 @@ def build_client_chat_fn(
 ) -> Callable[[list[prompts.Message]], str]:
     """A ChatFn that runs the client once per call. `check_available` has
     already refused anything that cannot run."""
-    from rotated_debate.engines import record_server_tool_use, record_usage
+    from rotated_debate.engines import record_usage
 
     client, model = split_client_model_id(model_id)
     executable = _executable(client)
@@ -562,6 +640,7 @@ def build_client_chat_fn(
             stdin_text = prompt
         else:
             command = antigravity_command(executable, model)
+            env["HOME"] = str(antigravity_home(workdir.name))
             stdin_text = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
         try:
             completed = run(
@@ -590,10 +669,11 @@ def build_client_chat_fn(
         elif client == "codex":
             text, usage = _parse_codex_events(label, completed.stdout)
         else:
-            text, usage = _parse_antigravity_result(label, completed.stdout)
+            text, usage = _parse_antigravity_result(
+                label, completed.stdout, completed.stderr or ""
+            )
         if usage_sink is not None:
             record_usage(usage_sink, label, usage)
-            record_server_tool_use(usage_sink, label, {"usage": usage})
         return text
 
     chat.workdir = workdir  # type: ignore[attr-defined]  # keeps the directory alive

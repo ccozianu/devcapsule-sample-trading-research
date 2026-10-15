@@ -59,7 +59,8 @@ if sys.argv[1:3] == ["login", "status"]:
         sys.stdout.write(fh.read())
     sys.exit(0)
 model = sys.argv[sys.argv.index("-m") + 1]
-with open(os.path.join(fixtures, "exec-events.jsonl"), encoding="utf-8") as fh:
+events = "exec-events-browse.jsonl" if os.environ.get("FAKE_CODEX_BROWSE") else "exec-events.jsonl"
+with open(os.path.join(fixtures, events), encoding="utf-8") as fh:
     for line in fh:
         event = json.loads(line)
         if event.get("type") == "item.completed":
@@ -78,7 +79,7 @@ stdin = "" if sys.argv[1:2] == ["models"] else sys.stdin.read()
 if log:
     with open(log, "a", encoding="utf-8") as fh:
         fh.write(json.dumps({"client": "antigravity", "argv": sys.argv[1:], "stdin": stdin,
-                             "cwd": os.getcwd(),
+                             "cwd": os.getcwd(), "home": os.environ.get("HOME"),
                              "key_vars": sorted(k for k in os.environ
                                                 if k.endswith("_API_KEY"))}) + "\n")
 if sys.argv[1:2] == ["models"]:
@@ -159,7 +160,7 @@ class FakeClientMixin:
         os.environ["FAKE_CODEX_FIXTURES"] = str(CODEX_FIXTURES)
         os.environ["FAKE_ANTIGRAVITY_FIXTURES"] = str(ANTIGRAVITY_FIXTURES)
         for key in ("FAKE_CLAUDE_LOGGED_IN", "FAKE_CLAUDE_FAIL", "FAKE_CLAUDE_REPLY",
-                    "FAKE_CODEX_LOGGED_IN", "FAKE_ANTIGRAVITY_LOGGED_IN"):
+                    "FAKE_CODEX_LOGGED_IN", "FAKE_ANTIGRAVITY_LOGGED_IN", "FAKE_CODEX_BROWSE"):
             os.environ.pop(key, None)
 
     def tearDown(self) -> None:
@@ -258,13 +259,11 @@ class RefusalTests(FakeClientMixin, unittest.TestCase):
                 self.assertIn(expected, str(ctx.exception))
         self.assertEqual(self.calls(), [])
 
-    def test_browse_is_refused_before_any_call_naming_the_engines(self) -> None:
-        specs = parse_engine_args("cli-claude-fable-5-1,gemini,chatgpt")
-        with self.assertRaises(SystemExit) as ctx:
-            build_engines(specs, None, {}, browse=True)
-        self.assertIn("cli-claude-fable-5-1", str(ctx.exception))
-        self.assertIn("--browse", str(ctx.exception))
-        self.assertEqual(self.calls(), [])
+    def test_browse_flag_is_accepted_for_client_engines(self) -> None:
+        specs = parse_engine_args("cli-claude-fable-5-1,cli-gpt-6-astra,cli-gemini-3.8-flash")
+        engines = build_engines(specs, None, {}, browse=True)
+        self.assertEqual(len(engines), 3)
+        self.assertEqual(sorted(c["argv"][0] for c in self.calls()), ["auth", "login", "models"])
 
     def test_not_signed_in_is_refused_before_any_call(self) -> None:
         os.environ["FAKE_CLAUDE_LOGGED_IN"] = "0"
@@ -410,7 +409,8 @@ assert chat([("system", "s"), ("user", "caf\u00e9 \u6c34")]) == "R\u00e9ponse: \
         self.assertEqual(argv[argv.index("--model") + 1], "claude-fable-5-1")
         self.assertEqual(argv[argv.index("--system-prompt") + 1], "You are the ANSWERER.")
         self.assertEqual(argv[argv.index("--output-format") + 1], "json")
-        self.assertEqual(argv[argv.index("--tools") + 1], "")
+        self.assertEqual(argv[argv.index("--tools") + 1], "WebSearch,WebFetch")
+        self.assertEqual(argv[argv.index("--allowedTools") + 1], "WebSearch,WebFetch")
         self.assertEqual(argv[argv.index("--setting-sources") + 1], "")
         self.assertIn("--no-session-persistence", argv)
         self.assertIn("--strict-mcp-config", argv)
@@ -467,6 +467,13 @@ assert chat([("system", "s"), ("user", "caf\u00e9 \u6c34")]) == "R\u00e9ponse: \
         self.assertAlmostEqual(entry["total_cost_usd"], 2 * PRINT_RESULT["total_cost_usd"])
         self.assertEqual(entry["web_search_requests"], 0)
         self.assertNotIn("service_tier", entry)
+        self.assertNotIn("web_fetch_requests", entry)
+
+    def test_web_searches_are_summed_from_model_usage(self) -> None:
+        report = json.loads(json.dumps(PRINT_RESULT))
+        for entry in report["modelUsage"].values():
+            entry["webSearchRequests"] = 3
+        self.assertEqual(clients.claude_usage(report)["web_search_requests"], 6)
 
     def test_client_failure_is_an_error_naming_the_engine(self) -> None:
         chat = build_chat_fn("cli-claude:claude-fable-5-1", None, label="cli-claude-fable-5-1")
@@ -518,7 +525,8 @@ class CodexCallTests(FakeClientMixin, unittest.TestCase):
         self.assertIn("--json", argv)
         self.assertEqual(argv[-1], "-")
         self.assertIn("--ignore-rules", argv)
-        self.assertIn('web_search="disabled"', argv)
+        self.assertIn('web_search="live"', argv)
+        self.assertNotIn('web_search="disabled"', argv)
         self.assertIn("features.shell_tool=false", argv)
         self.assertIn("features.apps=false", argv)
         self.assertNotIn("tools.web_search=false", argv)
@@ -544,6 +552,15 @@ class CodexCallTests(FakeClientMixin, unittest.TestCase):
         self.assertEqual((home / "auth.json").resolve(), (real_home / "auth.json").resolve())
         self.assertFalse((home / "AGENTS.md").exists())
 
+    def test_web_search_items_are_counted_not_refused(self) -> None:
+        os.environ["FAKE_CODEX_BROWSE"] = "1"
+        sink: dict = {}
+        chat = build_chat_fn("cli-codex:gpt-6-astra", None, usage_sink=sink, label="g")
+        text = chat([("system", "s"), ("user", "u")])
+        self.assertEqual(text, "answer from gpt-6-astra")
+        self.assertEqual(sink["g"]["web_search_requests"], 2)
+        self.assertEqual(sink["g"]["input_tokens"], 33508)
+
     def test_a_tool_item_in_the_stream_fails_the_call(self) -> None:
         events = (CODEX_FIXTURES / "exec-events.jsonl").read_text(encoding="utf-8")
         tool = json.dumps({"type": "item.completed", "item": {"type": "command_execution",
@@ -566,6 +583,7 @@ class CodexCallTests(FakeClientMixin, unittest.TestCase):
         self.assertEqual(entry["input_tokens"], 9345)
         self.assertEqual(entry["cached_input_tokens"], 7424)
         self.assertEqual(entry["reasoning_output_tokens"], 0)
+        self.assertEqual(entry["web_search_requests"], 0)
 
     def test_instructions_are_replaced_before_each_call(self) -> None:
         observed = []
@@ -660,6 +678,59 @@ class AntigravityCallTests(FakeClientMixin, unittest.TestCase):
         self.assertNotIn("--effort", argv)
         self.assertEqual(call["stdin"], "You are the SYNTHESIZER.\n\nSynthesize.")
 
+    def test_antigravity_runs_with_a_private_home_and_its_own_settings(self) -> None:
+        real_config = Path(self._tmp.name) / "real-home" / ".gemini" / "antigravity-cli"
+        real_config.mkdir(parents=True)
+        (real_config / "antigravity-oauth-token").write_text("token", encoding="utf-8")
+        (real_config / "settings.json").write_text(
+            '{"toolPermission": "always-proceed", "permissions": {"allow": ["command(*)"]}}',
+            encoding="utf-8",
+        )
+        with patch.dict(os.environ, {"HOME": str(Path(self._tmp.name) / "real-home")}):
+            chat = build_chat_fn("cli-antigravity:gemini-3.8-flash-high", None, label="x")
+            chat([("system", "s"), ("user", "u")])
+        call = self.calls()[-1]
+        home = Path(call["home"])
+        self.assertEqual(home.parent.resolve(), Path(call["cwd"]).resolve())
+        config = home / ".gemini" / "antigravity-cli"
+        self.assertEqual(sorted(p.name for p in config.iterdir()),
+                         ["antigravity-oauth-token", "settings.json"])
+        self.assertEqual((config / "antigravity-oauth-token").resolve(),
+                         (real_config / "antigravity-oauth-token").resolve())
+        settings = json.loads((config / "settings.json").read_text(encoding="utf-8"))
+        self.assertEqual(settings["toolPermission"], "always-proceed")
+        self.assertEqual(settings["permissions"]["allow"], ["read_url(*)"])
+        self.assertIn("command(*)", settings["permissions"]["deny"])
+
+    def test_empty_response_is_an_error_carrying_stderr(self) -> None:
+        empty = json.dumps({**ANTIGRAVITY_RESULT, "response": ""})
+
+        def run(command, **kwargs):
+            return subprocess.CompletedProcess(
+                command, 0, stdout=empty, stderr="jetski: no output produced — auto-denied"
+            )
+
+        sink: dict = {}
+        chat = clients.build_client_chat_fn(
+            "cli-antigravity:gemini-3.8-flash-high", sink, "g", run=run
+        )
+        with self.assertRaises(RuntimeError) as ctx:
+            chat([("system", "s"), ("user", "u")])
+        self.assertIn("auto-denied", str(ctx.exception))
+        self.assertEqual(sink, {})
+
+    def test_grounding_links_are_counted_as_browsing_evidence(self) -> None:
+        marker = clients.ANTIGRAVITY_GROUNDING_MARKER
+        os.environ["FAKE_CLAUDE_REPLY"] = (
+            f"Price $1. [a](https://{marker}/x) [b](https://{marker}/y)"
+        )
+        sink: dict = {}
+        chat = build_chat_fn(
+            "cli-antigravity:gemini-3.8-flash-high", None, usage_sink=sink, label="g"
+        )
+        chat([("system", "s"), ("user", "u")])
+        self.assertEqual(sink["g"]["grounding_links"], 2)
+
     def test_base_id_gets_the_default_effort(self) -> None:
         chat = build_chat_fn("cli-antigravity:gemini-3.8-flash", None, label="x")
         chat([("system", "s"), ("user", "u")])
@@ -676,6 +747,7 @@ class AntigravityCallTests(FakeClientMixin, unittest.TestCase):
         self.assertEqual(entry["input_tokens"], ANTIGRAVITY_RESULT["usage"]["input_tokens"])
         self.assertEqual(entry["thinking_tokens"], ANTIGRAVITY_RESULT["usage"]["thinking_tokens"])
         self.assertEqual(entry["num_turns"], 1)
+        self.assertEqual(entry["grounding_links"], 0)
 
     def test_error_status_is_an_error_naming_the_client(self) -> None:
         error = (ANTIGRAVITY_FIXTURES / "print-error.json").read_text(encoding="utf-8")

@@ -209,11 +209,8 @@ def build_chat_fn(
 ) -> ChatFn:
     sink_label = label if label is not None else model_id
     if clients.is_client_model_id(model_id):
-        if browse:
-            raise SystemExit(
-                f"--browse is not available through command-line clients yet "
-                f"({sink_label}); drop --browse or use the API route for it"
-            )
+        # Client engines browse by default (owner direction 2026-10-15);
+        # --browse neither adds nor removes anything for them.
         if temperature is not None:
             raise SystemExit(
                 f"--temperature is not supported through command-line clients "
@@ -258,23 +255,11 @@ def build_engines(
 ) -> dict[str, ChatFn]:
     """Engines keyed by reporting label (see engine_labels), not alias.
 
-    Refusals come before any model call: `--browse` with a client engine is
-    refused here for the whole lineup; a client not yet implemented, not
-    installed, or not signed in is refused by `build_chat_fn` as each engine
-    is built.
+    Refusals come before any model call: a client not installed or not
+    signed in is refused by `build_chat_fn` as each engine is built. Client
+    engines browse by default, so `--browse` concerns the API engines only.
     """
     labels = engine_labels(specs)
-    resolved = {spec.alias: resolve_model_id(spec) for spec in specs}
-    client_labels = [
-        labels[alias] for alias, model_id in resolved.items()
-        if clients.is_client_model_id(model_id)
-    ]
-    if browse and client_labels:
-        raise SystemExit(
-            "--browse is not available through command-line clients yet: "
-            + ", ".join(client_labels)
-            + "; drop --browse or use the API route for them"
-        )
     return {
         labels[spec.alias]: build_chat_fn(
             resolve_model_id(spec),
