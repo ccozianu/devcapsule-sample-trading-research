@@ -129,7 +129,14 @@ every tool unprompted, so the engine now runs with a private home (token
 link plus its own settings, `always-proceed` with a deny list; `strict`
 auto-denied the URL read and returned an empty answer, now an error that
 carries stderr). Three real calls through the code path, each demanding
-a search, answered with a live price and a source. Review round 4 on the
+a search, answered with a live price and a source. The NEM debate rerun
+with browsing, retained as
+`tests/resources/test-debates/20261015-130351-NEM-gold-debasement-cli-browse-debate.md`:
+20 minutes, `state=diverged`, zero parse errors; claude made 22 searches
+at $2.87 estimated, codex 7, antigravity showed no grounding link while
+reading 128k input tokens, which is the evidence floor the guide states.
+Browsing moved the engines from a 2022 baseline to the October 2026 tape.
+Review round 4 on the
 change: merged as `d52cddb`, resolved in `adf6c31`, see the
 [round-4 record](2026-10-15-record-review-round-4.md); the one runtime
 finding, a client last synthesizer keeping its web access, is closed:
