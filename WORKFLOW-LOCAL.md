@@ -96,6 +96,20 @@ What the project needs from the machine and the hosting service that the
 generic workflow cannot assume: branch permissions, runners, credentials, and
 the justification for each.
 
+- **Signed-in agent clients.** `claude`, `codex` and `antigravity`, signed
+  in once by the owner, are the `cli-` engine route's whole credential;
+  no API key is read on that route. Declared in the manifest's
+  `[capabilities] need` list.
+- **A signed-in GitHub CLI: needed, not available.** *Delivery And Review*
+  runs on pull requests, assessment comments and platform merges, which an
+  agent in the capsule cannot perform without `gh` and a sign-in. Until
+  the capsule provides one, the implementor writes the pull-request body
+  into a note in the workstream directory and the owner opens, retargets
+  and merges by hand. Requested from DevCapsule as a capability on
+  2026-10-15 by mail from `project-management`.
+- **Push access over SSH** to the integration remote and to the
+  coordination branch, which the capsule already carries.
+
 ## Exceptions
 
 Every recorded departure from `WORKFLOW.md`, each with its reason and, where
