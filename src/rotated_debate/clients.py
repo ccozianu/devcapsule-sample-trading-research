@@ -5,14 +5,25 @@ Owner decision 2026-10-14 (cli-engines workstream, decisions 1 to 5): an
 full id, reached through that vendor's default command-line client with
 the sign-in already present in the environment. No key is read, written
 or mentioned anywhere on this path. The client is called as a chat engine
-on the prompt alone: the protocol's system message is the whole system
-prompt, the user message is the prompt, no tools, no session, no
-repository access. The protocol, parsing and transcript modules do not
-know this module exists; `engines.py` dispatches here.
+on the prompt alone: the protocol's system message is the engine's whole
+instruction where the client can take one, the user message is the
+prompt, no tools of ours, no session, no repository access. The protocol,
+parsing and transcript modules do not know this module exists;
+`engines.py` dispatches here.
 
-Only the `claude` client is implemented in this slice. `codex` and
-`antigravity` resolve, so that the lineup grammar is final, but stop before
-any call with a message naming the slice that adds them.
+Three clients, one per vendor, probed on 2026-10-14 and 2026-10-15:
+
+- `claude` 2.1.261 (Anthropic): `-p`, JSON result, `--system-prompt`
+  replaces its agent prompt, `--tools ""`, no MCP, no settings files.
+- `codex` 0.153.4 (OpenAI): `exec --json`, a replacement instructions
+  file carries the system prompt, read-only sandbox, ephemeral.
+- `antigravity` 1.1.24 (Google): prompt on stdin, JSON result; it has no
+  instruction flag, so the system prompt is prepended to the prompt; its
+  model ids carry an effort level and one is added when the id has none.
+
+Each runs in an empty directory of its own, with the vendors' key
+variables removed from its environment, after its own sign-in report has
+been checked.
 """
 
 from __future__ import annotations
@@ -35,19 +46,18 @@ CLIENT_FOR_PROVIDER = {
     "openai": "codex",
     "google_genai": "antigravity",
 }
-IMPLEMENTED_CLIENTS = {"claude"}
-PLANNED_SLICE = {"codex": "slice 2", "antigravity": "slice 3"}
+IMPLEMENTED_CLIENTS = {"claude", "codex", "antigravity"}
 
 # Seconds a single client call may take before it is reported as a failure.
 TIMEOUT_ENV = "ROTATED_DEBATE_CLIENT_TIMEOUT"
 DEFAULT_TIMEOUT = 600.0
 
 # Direct credentials, custom headers that can carry one, and the selectors
-# of the cloud-provider routes (Bedrock, Vertex, Foundry) that bill a cloud
-# account instead of the sign-in. Removed from both subprocesses. Credentials
-# supplied by managed settings are outside this module's reach; the sign-in
-# check below reads what the client itself reports and refuses any method
-# other than the claude.ai sign-in.
+# of the cloud-provider routes that bill a cloud account instead of the
+# sign-in, for every vendor. Removed from every client subprocess, sign-in
+# check included. Credentials supplied by managed settings are outside this
+# module's reach; the sign-in checks below read what each client itself
+# reports and refuse any route other than the vendor's sign-in.
 KEY_VARIABLES = (
     "ANTHROPIC_API_KEY",
     "ANTHROPIC_AUTH_TOKEN",
@@ -56,13 +66,22 @@ KEY_VARIABLES = (
     "CLAUDE_CODE_USE_VERTEX",
     "CLAUDE_CODE_USE_FOUNDRY",
     "AWS_BEARER_TOKEN_BEDROCK",
+    "OPENAI_API_KEY",
+    "CODEX_API_KEY",
+    "GEMINI_API_KEY",
+    "GOOGLE_API_KEY",
 )
 # What `claude auth status` reports for the claude.ai sign-in, recorded in
 # tests/fixtures/claude-client/auth-status.json.
-SIGNED_IN = {"authMethod": "claude.ai", "apiProvider": "firstParty"}
-# Files whose presence in an ancestor directory means the client would load
+CLAUDE_SIGNED_IN = {"authMethod": "claude.ai", "apiProvider": "firstParty"}
+# What `codex login status` prints for the ChatGPT sign-in.
+CODEX_SIGNED_IN = "Logged in using ChatGPT"
+# Antigravity model ids end in their effort level; one is added otherwise.
+ANTIGRAVITY_EFFORTS = ("low", "medium", "high")
+ANTIGRAVITY_DEFAULT_EFFORT = "high"
+# Files whose presence in an ancestor directory means a client would load
 # instructions from there; the empty working directory must have none.
-INSTRUCTION_MARKERS = ("CLAUDE.md", ".claude")
+INSTRUCTION_MARKERS = ("CLAUDE.md", ".claude", "AGENTS.md", ".codex")
 
 Runner = Callable[..., "subprocess.CompletedProcess[str]"]
 
@@ -83,7 +102,7 @@ def client_model_id(item: str, infer_provider: Callable[[str], str | None]) -> s
         raise ValueError(
             f"{item!r}: cannot tell which client serves {model!r}; the name after "
             f"{CLI_PREFIX!r} must be a full model id shaped like claude-*, gemini-*, "
-            f"gpt-* or o<digit>*"
+            f"gpt-* or o<digit>* (vendor aliases such as 'chatgpt' are API-route names)"
         )
     return f"{CLI_PREFIX}{CLIENT_FOR_PROVIDER[provider]}:{model}"
 
@@ -117,24 +136,10 @@ def _executable(client: str) -> str:
     return path
 
 
-def check_available(model_id: str, run: Runner = subprocess.run) -> None:
-    """Refuse, before any model call, unless the client is implemented, present
-    and signed in. The refusal names the client and what would fix it."""
-    client, _ = split_client_model_id(model_id)
-    if client not in IMPLEMENTED_CLIENTS:
-        raise SystemExit(
-            f"{model_id!r}: the {client!r} client is not available yet; it arrives in "
-            f"{PLANNED_SLICE.get(client, 'a later slice')} of the cli-engines workstream"
-        )
-    executable = _executable(client)
-    if client == "claude":
-        _check_claude_signed_in(executable, run)
-
-
-def _check_claude_signed_in(executable: str, run: Runner) -> None:
+def _run_status(client: str, command: list[str], run: Runner) -> subprocess.CompletedProcess[str]:
     try:
-        completed = run(
-            [executable, "auth", "status"],
+        return run(
+            command,
             stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
@@ -145,14 +150,34 @@ def _check_claude_signed_in(executable: str, run: Runner) -> None:
         )
     except subprocess.TimeoutExpired as exc:
         raise SystemExit(
-            "the 'claude' client sign-in check did not finish within 60s; "
-            "check `claude auth status` and rerun"
+            f"the {client!r} client sign-in check did not finish within 60s; "
+            f"run `{' '.join(command[1:])}` yourself and rerun"
         ) from exc
     except OSError as exc:
         raise SystemExit(
-            f"could not run the 'claude' client sign-in check: {exc}; "
-            "check the client installation and rerun"
+            f"could not run the {client!r} client sign-in check: {exc}; "
+            f"check the client installation and rerun"
         ) from exc
+
+
+def check_available(model_id: str, run: Runner = subprocess.run) -> None:
+    """Refuse, before any model call, unless the client is implemented, present
+    and signed in through its vendor's sign-in, and (for antigravity) lists
+    the model. The refusal names the client and what would fix it."""
+    client, model = split_client_model_id(model_id)
+    if client not in IMPLEMENTED_CLIENTS:
+        raise SystemExit(f"{model_id!r}: no runner exists for the {client!r} client")
+    executable = _executable(client)
+    if client == "claude":
+        _check_claude_signed_in(executable, run)
+    elif client == "codex":
+        _check_codex_signed_in(executable, run)
+    else:
+        _check_antigravity_signed_in(executable, model, run)
+
+
+def _check_claude_signed_in(executable: str, run: Runner) -> None:
+    completed = _run_status("claude", [executable, "auth", "status"], run)
     status: Mapping[str, object] = {}
     try:
         parsed = json.loads(completed.stdout or "{}")
@@ -165,32 +190,55 @@ def _check_claude_signed_in(executable: str, run: Runner) -> None:
             "the 'claude' client is not signed in; run `claude` once and sign in "
             "(no API key is read on this route), then rerun"
         )
-    found = {key: status.get(key) for key in SIGNED_IN}
-    if found != SIGNED_IN:
+    found = {key: status.get(key) for key in CLAUDE_SIGNED_IN}
+    if found != CLAUDE_SIGNED_IN:
         raise SystemExit(
             f"the 'claude' client reports {found} where the claude.ai sign-in "
-            f"reports {SIGNED_IN}; this route uses only the sign-in, so sign in "
+            f"reports {CLAUDE_SIGNED_IN}; this route uses only the sign-in, so sign in "
             f"through claude.ai or use the API route for this engine"
         )
 
 
-def _instruction_free_directory() -> tempfile.TemporaryDirectory[str]:
-    """An empty directory of our own with no `CLAUDE.md` or `.claude` in any
-    ancestor, so the client loads no instructions from the file system. The
-    temporary root follows `TMPDIR`; one pointed inside a project would
-    defeat the isolation, so that is refused rather than silently accepted."""
-    workdir = tempfile.TemporaryDirectory(prefix="rotated-debate-client-")
-    path = Path(workdir.name).resolve()
-    for ancestor in path.parents:
-        for marker in INSTRUCTION_MARKERS:
-            if (ancestor / marker).exists():
-                workdir.cleanup()
-                raise SystemExit(
-                    f"the temporary directory {path} sits under {ancestor}, which "
-                    f"carries {marker}; the client would load instructions from "
-                    f"there. Point TMPDIR at a directory outside any project"
-                )
-    return workdir
+def _check_codex_signed_in(executable: str, run: Runner) -> None:
+    completed = _run_status("codex", [executable, "login", "status"], run)
+    report = (completed.stdout + completed.stderr).strip()
+    if completed.returncode != 0 or CODEX_SIGNED_IN not in report:
+        raise SystemExit(
+            f"the 'codex' client is not signed in through ChatGPT (it reports "
+            f"{report[:120]!r}); run `codex login` and sign in with ChatGPT, then rerun"
+        )
+
+
+def antigravity_model_ids(listing: str) -> list[str]:
+    """Ids from `antigravity models`: the first field of each listing line."""
+    ids = []
+    for line in listing.splitlines():
+        fields = line.split("\t")
+        first = fields[0].strip()
+        if first and len(fields) > 1 and " " not in first:
+            ids.append(first)
+    return ids
+
+
+def _antigravity_candidates(model: str) -> list[str]:
+    if model.endswith(tuple(f"-{effort}" for effort in ANTIGRAVITY_EFFORTS)):
+        return [model]
+    return [f"{model}-{effort}" for effort in ANTIGRAVITY_EFFORTS]
+
+
+def _check_antigravity_signed_in(executable: str, model: str, run: Runner) -> None:
+    completed = _run_status("antigravity", [executable, "models"], run)
+    ids = antigravity_model_ids(completed.stdout)
+    if completed.returncode != 0 or not ids:
+        raise SystemExit(
+            "the 'antigravity' client is not signed in or lists no models; run "
+            "`antigravity` once and sign in, then rerun"
+        )
+    if not any(candidate in ids for candidate in _antigravity_candidates(model)):
+        raise SystemExit(
+            f"the 'antigravity' client does not list {model!r}; it lists: "
+            + ", ".join(ids)
+        )
 
 
 def _split_messages(messages: list[prompts.Message]) -> tuple[str, str]:
@@ -207,6 +255,28 @@ def _split_messages(messages: list[prompts.Message]) -> tuple[str, str]:
                 f"client engines take single-turn messages; got a {role!r} message"
             )
     return "\n\n".join(system_parts), "\n\n".join(user_parts)
+
+
+def _instruction_free_directory() -> tempfile.TemporaryDirectory[str]:
+    """An empty directory of our own with no instruction file in any
+    ancestor, so a client loads no instructions from the file system. The
+    temporary root follows `TMPDIR`; one pointed inside a project would
+    defeat the isolation, so that is refused rather than silently accepted."""
+    workdir = tempfile.TemporaryDirectory(prefix="rotated-debate-client-")
+    path = Path(workdir.name).resolve()
+    for ancestor in path.parents:
+        for marker in INSTRUCTION_MARKERS:
+            if (ancestor / marker).exists():
+                workdir.cleanup()
+                raise SystemExit(
+                    f"the temporary directory {path} sits under {ancestor}, which "
+                    f"carries {marker}; the client would load instructions from "
+                    f"there. Point TMPDIR at a directory outside any project"
+                )
+    return workdir
+
+
+# ---- claude ---------------------------------------------------------------
 
 
 def claude_command(executable: str, model: str, system_prompt: str) -> list[str]:
@@ -244,15 +314,8 @@ def claude_command(executable: str, model: str, system_prompt: str) -> list[str]
     ]
 
 
-def _parse_claude_result(label: str, stdout: str) -> tuple[str, Mapping[str, object]]:
-    try:
-        report = json.loads(stdout)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(
-            f"{label}: the claude client did not return JSON: {stdout[:200]!r}"
-        ) from exc
-    if not isinstance(report, Mapping):
-        raise RuntimeError(f"{label}: unexpected claude client output: {stdout[:200]!r}")
+def _parse_claude_result(label: str, stdout: str) -> tuple[str, dict[str, object]]:
+    report = _load_json_object(label, "claude", stdout)
     if report.get("is_error") or report.get("subtype") != "success":
         raise RuntimeError(
             f"{label}: the claude client reported {report.get('subtype')!r}: "
@@ -261,7 +324,7 @@ def _parse_claude_result(label: str, stdout: str) -> tuple[str, Mapping[str, obj
     text = report.get("result")
     if not isinstance(text, str):
         raise RuntimeError(f"{label}: the claude client returned no result text")
-    return text, report
+    return text, claude_usage(report)
 
 
 def claude_usage(report: Mapping[str, object]) -> dict[str, object]:
@@ -276,6 +339,131 @@ def claude_usage(report: Mapping[str, object]) -> dict[str, object]:
         if key in report:
             usage[key] = report[key]
     return usage
+
+
+# ---- codex ----------------------------------------------------------------
+
+
+def codex_command(executable: str, model: str, workdir: str, instructions: str) -> list[str]:
+    """The exact call, probed against codex 0.153.4 on 2026-10-15.
+
+    `exec` runs one turn and exits; `--json` streams events, the last of
+    which carries token usage; `-` reads the prompt from stdin; `-C` sets
+    the empty working directory and `--skip-git-repo-check` lets it run
+    there; `-s read-only` is the tightest sandbox the client offers, and the
+    directory is empty anyway; `--ephemeral` persists no session;
+    `model_instructions_file` replaces the client's built-in instructions
+    with the engine's system prompt (measured 9,345 input tokens against
+    14,283 without, on this version). The client's own tool descriptions
+    remain in the prompt; there is no flag to drop them.
+    """
+    return [
+        executable,
+        "exec",
+        "--json",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "-s",
+        "read-only",
+        "-C",
+        workdir,
+        "-m",
+        model,
+        "-c",
+        f"model_instructions_file={instructions}",
+        "-",
+    ]
+
+
+def _parse_codex_events(label: str, stdout: str) -> tuple[str, dict[str, object]]:
+    """Events: `item.completed` with an `agent_message` carries the text,
+    `turn.completed` carries usage; an `error` event is a failure."""
+    text: str | None = None
+    usage: dict[str, object] = {}
+    for line in stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(event, Mapping):
+            continue
+        kind = event.get("type")
+        if kind == "item.completed":
+            item = event.get("item")
+            if isinstance(item, Mapping) and item.get("type") == "agent_message":
+                if isinstance(item.get("text"), str):
+                    text = item["text"]
+        elif kind == "turn.completed":
+            reported = event.get("usage")
+            if isinstance(reported, Mapping):
+                usage.update(reported)
+        elif kind == "error":
+            raise RuntimeError(
+                f"{label}: the codex client reported an error: "
+                f"{str(event.get('message', event))[:500]}"
+            )
+    if text is None:
+        raise RuntimeError(
+            f"{label}: the codex client produced no agent message: {stdout[-300:]!r}"
+        )
+    return text, usage
+
+
+# ---- antigravity ----------------------------------------------------------
+
+
+def antigravity_command(executable: str, model: str) -> list[str]:
+    """The exact call, probed against antigravity 1.1.24 on 2026-10-15.
+
+    The prompt travels on stdin, which selects print mode (the `--print`
+    flag takes the prompt as its argument instead); `--output-format json`
+    returns the response with usage; `--sandbox` restricts the terminal;
+    an id without an effort suffix gets `--effort high`, since the client
+    requires one. There is no instruction flag: the system prompt is
+    prepended to the prompt, separated by a blank line, and the client's
+    own agent prompt (about 14,600 tokens on this version) stays.
+    """
+    command = [executable, "--output-format", "json", "--model", model, "--sandbox"]
+    if _antigravity_candidates(model) != [model]:
+        command += ["--effort", ANTIGRAVITY_DEFAULT_EFFORT]
+    return command
+
+
+def _parse_antigravity_result(label: str, stdout: str) -> tuple[str, dict[str, object]]:
+    report = _load_json_object(label, "antigravity", stdout)
+    if report.get("status") != "SUCCESS":
+        raise RuntimeError(
+            f"{label}: the antigravity client reported {report.get('status')!r}: "
+            f"{str(report.get('error', ''))[:500]}"
+        )
+    text = report.get("response")
+    if not isinstance(text, str):
+        raise RuntimeError(f"{label}: the antigravity client returned no response text")
+    usage: dict[str, object] = {}
+    reported = report.get("usage")
+    if isinstance(reported, Mapping):
+        usage.update(reported)
+    if "num_turns" in report:
+        usage["num_turns"] = report["num_turns"]
+    return text, usage
+
+
+# ---- shared ---------------------------------------------------------------
+
+
+def _load_json_object(label: str, client: str, stdout: str) -> dict[str, object]:
+    try:
+        report = json.loads(stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(
+            f"{label}: the {client} client did not return JSON: {stdout[:200]!r}"
+        ) from exc
+    if not isinstance(report, Mapping):
+        raise RuntimeError(f"{label}: unexpected {client} client output: {stdout[:200]!r}")
+    return dict(report)
 
 
 def build_client_chat_fn(
@@ -296,11 +484,21 @@ def build_client_chat_fn(
 
     def chat(messages: list[prompts.Message]) -> str:
         system_prompt, prompt = _split_messages(messages)
-        command = claude_command(executable, model, system_prompt)
+        if client == "claude":
+            command = claude_command(executable, model, system_prompt)
+            stdin_text = prompt
+        elif client == "codex":
+            instructions = Path(workdir.name) / "instructions.md"
+            instructions.write_text(system_prompt, encoding="utf-8")
+            command = codex_command(executable, model, workdir.name, str(instructions))
+            stdin_text = prompt
+        else:
+            command = antigravity_command(executable, model)
+            stdin_text = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
         try:
             completed = run(
                 command,
-                input=prompt,
+                input=stdin_text,
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
@@ -319,9 +517,13 @@ def build_client_chat_fn(
                 f"{label}: the {client} client exited {completed.returncode}: "
                 f"{(completed.stderr or completed.stdout).strip()[-500:]}"
             )
-        text, report = _parse_claude_result(label, completed.stdout)
+        if client == "claude":
+            text, usage = _parse_claude_result(label, completed.stdout)
+        elif client == "codex":
+            text, usage = _parse_codex_events(label, completed.stdout)
+        else:
+            text, usage = _parse_antigravity_result(label, completed.stdout)
         if usage_sink is not None:
-            usage = claude_usage(report)
             record_usage(usage_sink, label, usage)
             record_server_tool_use(usage_sink, label, {"usage": usage})
         return text

@@ -39,6 +39,7 @@
 - [Portfolio-context workstream status](engineering-docs/wip/2026-09-01-portfolio-context/CURRENT-STATUS.md)
 - [CLI-engines workstream status](engineering-docs/wip/2026-10-13-cli-engines/CURRENT-STATUS.md)
 - [Work order: cli-engines slice 1, the claude client](engineering-docs/work-orders/2026-10-14-cli-engines-slice-1-claude-client.md)
+- [Work order: cli-engines slices 2 and 3, the codex and antigravity clients](engineering-docs/work-orders/2026-10-15-cli-engines-slices-2-3-codex-antigravity.md)
 
 ## Other Existing Documentation
 
@@ -60,3 +61,5 @@
 - [Specification: debate invocation surfaces v0](engineering-docs/specifications/debate-invocation.md)
 - [tests/fixtures/labeled/README.md](tests/fixtures/labeled/README.md)
 - [tests/fixtures/claude-client/README.md](tests/fixtures/claude-client/README.md)
+- [tests/fixtures/codex-client/README.md](tests/fixtures/codex-client/README.md)
+- [tests/fixtures/antigravity-client/README.md](tests/fixtures/antigravity-client/README.md)

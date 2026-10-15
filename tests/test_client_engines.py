@@ -1,9 +1,10 @@
-"""Command-line client engines, driven by a fake `claude` on PATH.
+"""Command-line client engines, driven by fake `claude`, `codex` and
+`antigravity` scripts on PATH.
 
-No sign-in, no network, no real client: the fake answers `auth status` and
-the print command with recorded JSON shaped like claude 2.1.261's output of
-2026-10-14. Re-record the fake if a client version changes the flags or the
-shape.
+No sign-in, no network, no real client: each fake answers its sign-in
+command and its print command from the recorded fixtures under
+tests/fixtures/<client>-client/. Re-record when a client version changes
+the flags or the shape.
 """
 
 import json
@@ -29,8 +30,73 @@ from rotated_debate.engines import (
 )
 
 FIXTURES = Path(__file__).parent / "fixtures" / "claude-client"
+CODEX_FIXTURES = Path(__file__).parent / "fixtures" / "codex-client"
+ANTIGRAVITY_FIXTURES = Path(__file__).parent / "fixtures" / "antigravity-client"
 PRINT_RESULT = json.loads((FIXTURES / "print-result.json").read_text(encoding="utf-8"))
 AUTH_STATUS = json.loads((FIXTURES / "auth-status.json").read_text(encoding="utf-8"))
+ANTIGRAVITY_RESULT = json.loads(
+    (ANTIGRAVITY_FIXTURES / "print-result.json").read_text(encoding="utf-8")
+)
+
+FAKE_CODEX = r'''#!/usr/bin/env python3
+"""Fake `codex`: records its call, answers from the recorded fixtures."""
+import json, os, sys
+sys.stdin.reconfigure(encoding="utf-8")
+sys.stdout.reconfigure(encoding="utf-8")
+fixtures = os.environ["FAKE_CODEX_FIXTURES"]
+log = os.environ.get("FAKE_CLAUDE_LOG")
+stdin = "" if sys.argv[1:3] == ["login", "status"] else sys.stdin.read()
+if log:
+    with open(log, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps({"client": "codex", "argv": sys.argv[1:], "stdin": stdin,
+                             "cwd": os.getcwd(),
+                             "key_vars": sorted(k for k in os.environ
+                                                if k.endswith("_API_KEY"))}) + "\n")
+if sys.argv[1:3] == ["login", "status"]:
+    if os.environ.get("FAKE_CODEX_LOGGED_IN", "1") != "1":
+        print("Not logged in"); sys.exit(1)
+    with open(os.path.join(fixtures, "login-status.txt"), encoding="utf-8") as fh:
+        sys.stdout.write(fh.read())
+    sys.exit(0)
+model = sys.argv[sys.argv.index("-m") + 1]
+with open(os.path.join(fixtures, "exec-events.jsonl"), encoding="utf-8") as fh:
+    for line in fh:
+        event = json.loads(line)
+        if event.get("type") == "item.completed":
+            event["item"]["text"] = os.environ.get("FAKE_CLAUDE_REPLY", "answer from " + model)
+        print(json.dumps(event, ensure_ascii=False))
+'''
+
+FAKE_ANTIGRAVITY = r'''#!/usr/bin/env python3
+"""Fake `antigravity`: records its call, answers from the recorded fixtures."""
+import json, os, sys
+sys.stdin.reconfigure(encoding="utf-8")
+sys.stdout.reconfigure(encoding="utf-8")
+fixtures = os.environ["FAKE_ANTIGRAVITY_FIXTURES"]
+log = os.environ.get("FAKE_CLAUDE_LOG")
+stdin = "" if sys.argv[1:2] == ["models"] else sys.stdin.read()
+if log:
+    with open(log, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps({"client": "antigravity", "argv": sys.argv[1:], "stdin": stdin,
+                             "cwd": os.getcwd(),
+                             "key_vars": sorted(k for k in os.environ
+                                                if k.endswith("_API_KEY"))}) + "\n")
+if sys.argv[1:2] == ["models"]:
+    if os.environ.get("FAKE_ANTIGRAVITY_LOGGED_IN", "1") != "1":
+        print("Fetching available models...\nError: not signed in", file=sys.stderr); sys.exit(1)
+    with open(os.path.join(fixtures, "models.txt"), encoding="utf-8") as fh:
+        sys.stdout.write(fh.read())
+    sys.exit(0)
+model = sys.argv[sys.argv.index("--model") + 1]
+suffixed = model.endswith(("-low", "-medium", "-high"))
+name = "print-result.json" if "--effort" in sys.argv or suffixed else "print-error.json"
+with open(os.path.join(fixtures, name), encoding="utf-8") as fh:
+    report = json.load(fh)
+if report["status"] != "SUCCESS":
+    print(json.dumps(report)); sys.exit(1)
+report["response"] = os.environ.get("FAKE_CLAUDE_REPLY", "answer from " + model)
+print(json.dumps(report, ensure_ascii=False))
+'''
 
 FAKE_CLAUDE = r'''#!/usr/bin/env python3
 """Fake `claude`: records its call, answers from the recorded fixtures."""
@@ -79,15 +145,21 @@ class FakeClientMixin:
         self._tmp = tempfile.TemporaryDirectory()
         self.bin = Path(self._tmp.name) / "bin"
         self.bin.mkdir()
-        fake = self.bin / "claude"
-        fake.write_text(FAKE_CLAUDE, encoding="utf-8")
-        fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
+        for name, source in (
+            ("claude", FAKE_CLAUDE), ("codex", FAKE_CODEX), ("antigravity", FAKE_ANTIGRAVITY)
+        ):
+            fake = self.bin / name
+            fake.write_text(source, encoding="utf-8")
+            fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
         self.log = Path(self._tmp.name) / "calls.jsonl"
         self._env = dict(os.environ)
         os.environ["PATH"] = f"{self.bin}{os.pathsep}{self._env.get('PATH', '')}"
         os.environ["FAKE_CLAUDE_LOG"] = str(self.log)
         os.environ["FAKE_CLAUDE_FIXTURES"] = str(FIXTURES)
-        for key in ("FAKE_CLAUDE_LOGGED_IN", "FAKE_CLAUDE_FAIL", "FAKE_CLAUDE_REPLY"):
+        os.environ["FAKE_CODEX_FIXTURES"] = str(CODEX_FIXTURES)
+        os.environ["FAKE_ANTIGRAVITY_FIXTURES"] = str(ANTIGRAVITY_FIXTURES)
+        for key in ("FAKE_CLAUDE_LOGGED_IN", "FAKE_CLAUDE_FAIL", "FAKE_CLAUDE_REPLY",
+                    "FAKE_CODEX_LOGGED_IN", "FAKE_ANTIGRAVITY_LOGGED_IN"):
             os.environ.pop(key, None)
 
     def tearDown(self) -> None:
@@ -238,15 +310,39 @@ class RefusalTests(FakeClientMixin, unittest.TestCase):
             build_chat_fn("cli-claude:claude-fable-5-1", None, label="x")
         self.assertIn("not on PATH", str(ctx.exception))
 
-    def test_other_clients_are_refused_naming_their_slice(self) -> None:
-        for model_id, slice_name in (
-            ("cli-codex:gpt-6-astra", "slice 2"),
-            ("cli-antigravity:gemini-3.8-flash-high", "slice 3"),
-        ):
-            with self.assertRaises(SystemExit) as ctx:
-                build_chat_fn(model_id, None, label=model_id)
-            self.assertIn(slice_name, str(ctx.exception))
-        self.assertEqual(self.calls(), [])
+    def test_codex_not_signed_in_through_chatgpt_is_refused(self) -> None:
+        os.environ["FAKE_CODEX_LOGGED_IN"] = "0"
+        with self.assertRaises(SystemExit) as ctx:
+            build_chat_fn("cli-codex:gpt-6-astra", None, label="x")
+        self.assertIn("ChatGPT", str(ctx.exception))
+        self.assertEqual([c["argv"] for c in self.calls()], [["login", "status"]])
+
+    def test_codex_api_key_sign_in_is_refused(self) -> None:
+        def run(command, **kwargs):
+            return subprocess.CompletedProcess(
+                command, 0, stdout="Logged in using API key\n", stderr=""
+            )
+
+        with self.assertRaises(SystemExit) as ctx:
+            clients.check_available("cli-codex:gpt-6-astra", run=run)
+        self.assertIn("ChatGPT", str(ctx.exception))
+
+    def test_antigravity_not_signed_in_is_refused(self) -> None:
+        os.environ["FAKE_ANTIGRAVITY_LOGGED_IN"] = "0"
+        with self.assertRaises(SystemExit) as ctx:
+            build_chat_fn("cli-antigravity:gemini-3.8-flash-high", None, label="x")
+        self.assertIn("not signed in", str(ctx.exception))
+        self.assertEqual([c["argv"] for c in self.calls()], [["models"]])
+
+    def test_antigravity_unlisted_model_is_refused_with_the_list(self) -> None:
+        with self.assertRaises(SystemExit) as ctx:
+            build_chat_fn("cli-antigravity:gemini-9-ultra", None, label="x")
+        self.assertIn("gemini-3.8-flash-high", str(ctx.exception))
+        self.assertEqual(len(self.calls()), 1)
+
+    def test_antigravity_base_id_is_accepted_when_a_suffixed_id_is_listed(self) -> None:
+        build_chat_fn("cli-antigravity:gemini-3.8-flash", None, label="x")
+        self.assertEqual([c["argv"] for c in self.calls()], [["models"]])
 
 
 class ClaudeCallTests(FakeClientMixin, unittest.TestCase):
@@ -374,6 +470,103 @@ assert chat([("system", "s"), ("user", "caf\u00e9 \u6c34")]) == "R\u00e9ponse: \
         self.assertIn("quota", str(ctx.exception))
 
 
+class CodexCallTests(FakeClientMixin, unittest.TestCase):
+    def test_command_line_instructions_file_and_prompt_routing(self) -> None:
+        chat = build_chat_fn("cli-codex:gpt-6-astra", None, label="cli-gpt-6-astra")
+        reply = chat([("system", "You are the CRITIC."), ("user", "Critique this.")])
+        self.assertEqual(reply, "answer from gpt-6-astra")
+        call = [c for c in self.calls() if c["argv"][:1] == ["exec"]][-1]
+        argv = call["argv"]
+        self.assertEqual(argv[argv.index("-m") + 1], "gpt-6-astra")
+        self.assertEqual(argv[argv.index("-s") + 1], "read-only")
+        self.assertIn("--ephemeral", argv)
+        self.assertIn("--json", argv)
+        self.assertEqual(argv[-1], "-")
+        self.assertEqual(call["stdin"], "Critique this.")
+        workdir = Path(argv[argv.index("-C") + 1])
+        self.assertEqual(Path(call["cwd"]).resolve(), workdir.resolve())
+        instructions = argv[argv.index("-c") + 1].removeprefix("model_instructions_file=")
+        self.assertEqual(Path(instructions).read_text(encoding="utf-8"), "You are the CRITIC.")
+        self.assertEqual(Path(instructions).parent, workdir)
+
+    def test_usage_comes_from_the_turn_completed_event(self) -> None:
+        sink: dict = {}
+        chat = build_chat_fn(
+            "cli-codex:gpt-6-astra", None, usage_sink=sink, label="cli-gpt-6-astra"
+        )
+        chat([("system", "s"), ("user", "u")])
+        entry = sink["cli-gpt-6-astra"]
+        self.assertEqual(entry["calls"], 1)
+        self.assertEqual(entry["input_tokens"], 9345)
+        self.assertEqual(entry["cached_input_tokens"], 7424)
+        self.assertEqual(entry["reasoning_output_tokens"], 0)
+
+    def test_error_event_and_missing_message_are_errors(self) -> None:
+        with self.assertRaises(RuntimeError) as ctx:
+            clients._parse_codex_events("x", '{"type":"error","message":"quota"}\n')
+        self.assertIn("quota", str(ctx.exception))
+        with self.assertRaises(RuntimeError) as ctx:
+            clients._parse_codex_events("x", '{"type":"turn.completed","usage":{}}\n')
+        self.assertIn("no agent message", str(ctx.exception))
+
+    def test_api_keys_never_reach_codex(self) -> None:
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test", "CODEX_API_KEY": "k"}):
+            chat = build_chat_fn("cli-codex:gpt-6-astra", None, label="x")
+            chat([("system", "s"), ("user", "u")])
+        self.assertTrue(all(c["key_vars"] == [] for c in self.calls()), self.calls())
+
+
+class AntigravityCallTests(FakeClientMixin, unittest.TestCase):
+    def test_command_line_and_prepended_system_prompt(self) -> None:
+        chat = build_chat_fn("cli-antigravity:gemini-3.8-flash-high", None, label="x")
+        reply = chat([("system", "You are the SYNTHESIZER."), ("user", "Synthesize.")])
+        self.assertEqual(reply, "answer from gemini-3.8-flash-high")
+        call = self.calls()[-1]
+        argv = call["argv"]
+        self.assertEqual(argv[argv.index("--model") + 1], "gemini-3.8-flash-high")
+        self.assertEqual(argv[argv.index("--output-format") + 1], "json")
+        self.assertIn("--sandbox", argv)
+        self.assertNotIn("--print", argv)
+        self.assertNotIn("--effort", argv)
+        self.assertEqual(call["stdin"], "You are the SYNTHESIZER.\n\nSynthesize.")
+
+    def test_base_id_gets_the_default_effort(self) -> None:
+        chat = build_chat_fn("cli-antigravity:gemini-3.8-flash", None, label="x")
+        chat([("system", "s"), ("user", "u")])
+        argv = self.calls()[-1]["argv"]
+        self.assertEqual(argv[argv.index("--effort") + 1], "high")
+
+    def test_usage_and_turns_are_recorded_as_reported(self) -> None:
+        sink: dict = {}
+        chat = build_chat_fn(
+            "cli-antigravity:gemini-3.8-flash-high", None, usage_sink=sink, label="g"
+        )
+        chat([("system", "s"), ("user", "u")])
+        entry = sink["g"]
+        self.assertEqual(entry["input_tokens"], ANTIGRAVITY_RESULT["usage"]["input_tokens"])
+        self.assertEqual(entry["thinking_tokens"], ANTIGRAVITY_RESULT["usage"]["thinking_tokens"])
+        self.assertEqual(entry["num_turns"], 1)
+
+    def test_error_status_is_an_error_naming_the_client(self) -> None:
+        error = (ANTIGRAVITY_FIXTURES / "print-error.json").read_text(encoding="utf-8")
+        with self.assertRaises(RuntimeError) as ctx:
+            clients._parse_antigravity_result("x", error)
+        self.assertIn("requires --effort", str(ctx.exception))
+
+    def test_model_ids_parse_from_the_listing(self) -> None:
+        listing = (ANTIGRAVITY_FIXTURES / "models.txt").read_text(encoding="utf-8")
+        ids = clients.antigravity_model_ids(listing)
+        self.assertIn("gemini-3.8-flash-high", ids)
+        self.assertIn("gpt-oss-120b-medium", ids)
+        self.assertNotIn("Fetching", " ".join(ids))
+
+    def test_api_keys_never_reach_antigravity(self) -> None:
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "g", "GOOGLE_API_KEY": "g"}):
+            chat = build_chat_fn("cli-antigravity:gemini-3.8-flash-high", None, label="x")
+            chat([("system", "s"), ("user", "u")])
+        self.assertTrue(all(c["key_vars"] == [] for c in self.calls()), self.calls())
+
+
 class UsageSinkTests(unittest.TestCase):
     def test_float_fields_accumulate(self) -> None:
         sink: dict = {}
@@ -401,6 +594,24 @@ class EndToEndTests(FakeClientMixin, unittest.TestCase):
         argvs = [c["argv"] for c in self.calls()]
         self.assertEqual(argvs.count(["auth", "status"]), 3)
         self.assertTrue(all(a[0] == "-p" for a in argvs if a[:2] != ["auth", "status"]))
+
+    def test_full_debate_across_the_three_clients(self) -> None:
+        os.environ["FAKE_CLAUDE_REPLY"] = ENGINE_REPLY
+        out = Path(self._tmp.name) / "debate.md"
+        code = main([
+            "ask", "Is water wet?",
+            "--engines", "cli-claude-fable-5-1,cli-gpt-6-astra,cli-gemini-3.8-flash",
+            "--out", str(out),
+        ])
+        self.assertEqual(code, 0)
+        text = out.read_text(encoding="utf-8")
+        self.assertIn('"cli-gpt-6-astra": "cli-codex:gpt-6-astra"', text)
+        self.assertIn('"cli-gemini-3.8-flash": "cli-antigravity:gemini-3.8-flash"', text)
+        self.assertIn('"cli-claude-fable-5-1": "cli-claude:claude-fable-5-1"', text)
+        self.assertIn("state=", "state=")  # the CLI printed; transcript has the state below
+        self.assertIn("synthesizer_meta:", text)
+        clients_used = {c.get("client", "claude") for c in self.calls()}
+        self.assertEqual(clients_used, {"claude", "codex", "antigravity"})
 
 
 if __name__ == "__main__":

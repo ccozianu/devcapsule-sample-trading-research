@@ -77,28 +77,44 @@ Each item can be, in order of resolution priority:
    and billed to that subscription. The vendor is inferred from the name
    exactly as for a bare model name, and each vendor has one client:
 
-   | Name shape | Client | Available |
-   |---|---|---|
-   | `cli-claude-*` | `claude` | yes |
-   | `cli-gpt-*`, `cli-o<digit>*` | `codex` | not yet (slice 2) |
-   | `cli-gemini-*` | `antigravity` | not yet (slice 3) |
+   | Name shape | Client | Signed in through | Sign-in check |
+   |---|---|---|---|
+   | `cli-claude-*` | `claude` | claude.ai | `claude auth status` |
+   | `cli-gpt-*`, `cli-o<digit>*` | `codex` | ChatGPT | `codex login status` |
+   | `cli-gemini-*` | `antigravity` | Google | `antigravity models` |
 
    The name after `cli-` is passed to the client unchanged, so it must be
-   an id the client accepts (`claude --model` takes full names); a wrong
-   id fails at the client with its own message. A handle bound with
+   an id the client accepts; a wrong id fails at the client with its own
+   message. `chatgpt` is an API-route alias, not a model id: the client
+   form is `cli-gpt-6-astra`. Antigravity's ids end in an effort level
+   (`gemini-3.8-flash-high`); an id without one (`cli-gemini-3.8-flash`)
+   gets `high`, and an id it does not list is refused with the list, since
+   that client also serves Claude and GPT-OSS models. A handle bound with
    `name=cli-...` still honors `ROTATED_DEBATE_MODEL_<NAME>` like any
-   handle. Before the debate starts, each client is asked whether it is
-   signed in; if one is not, nothing runs and the message names the
-   client to sign in to. The client is called as a plain chat engine: the
-   role prompt as its whole system prompt, no built-in tools, no MCP
-   servers, no saved session, in an empty working directory, with
-   `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_CUSTOM_HEADERS`
-   and the Bedrock, Vertex and Foundry route selectors removed from its
-   environment, and the client's own sign-in report must say claude.ai,
-   first party; any other method refuses. Managed organization settings,
-   if your client has any, still apply. If `TMPDIR` points inside a
-   project, the engine refuses rather than let the client read that
-   project's instructions. `--browse`
+   handle.
+
+   Before the debate starts, each client is asked whether it is signed in
+   through its vendor's sign-in; if one is not, nothing runs and the
+   message names the client to sign in to. A client signed in with an API
+   key refuses too: this route is the subscription. Each client is called
+   as a plain chat engine in an empty working directory, with every
+   vendor's key variables (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`,
+   `GEMINI_API_KEY`, `GOOGLE_API_KEY`, their token and cloud-route
+   variants) removed from its environment, so an exported key cannot take
+   over the billing. What each client can take:
+
+   - `claude`: the role prompt replaces its system prompt; no built-in
+     tools, no MCP servers, no settings files, no saved session.
+   - `codex`: the role prompt replaces its built-in instructions through
+     an instructions file; read-only sandbox; ephemeral. Its tool
+     descriptions stay in the prompt (about 9,000 tokens per call).
+   - `antigravity`: no instruction flag, so the role prompt is prepended
+     to the prompt; `--sandbox`. Its own agent prompt stays (about
+     14,600 tokens per call).
+
+   Managed organization settings, if a client has any, still apply. If
+   `TMPDIR` points inside a project, the engine refuses rather than let a
+   client read that project's instructions. `--browse`
    and `--temperature` are not available on this route and refuse, naming
    the engine. Routes mix freely:
    `--engines cli-claude-fable-5-1,gemini,chatgpt` is a normal debate. One
@@ -136,9 +152,11 @@ rotation's full exchange and synthesis. Frontmatter worth knowing:
   (token counts for all current bindings) plus a `calls` counter, and —
   on browsing runs, where the provider reports it — server-side search
   counts (e.g. `web_search_requests`). A client engine adds what its
-  client reports: for `claude`, `total_cost_usd` and `num_turns`.
-  The dollar value is the client's reported estimate, not a measurement of
-  subscription charges or remaining plan allowance. See
+  client reports: for `claude`, `total_cost_usd` and `num_turns`; for
+  `codex`, cached and reasoning token counts; for `antigravity`, thinking
+  tokens and `num_turns`. The dollar value is the `claude` client's
+  reported estimate, not a measurement of subscription charges or
+  remaining plan allowance; the other two report no price. See
   [Claude Code's cost documentation](https://code.claude.com/docs/en/costs).
 - `outcome_state` — reserves `deterministic_tally` (future) alongside the
   `synthesizer_meta` verdict aggregation and, when
