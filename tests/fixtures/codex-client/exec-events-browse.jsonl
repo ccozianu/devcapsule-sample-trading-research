@@ -1,0 +1,6 @@
+{"type":"thread.started","thread_id":"00000000-0000-0000-0000-000000000000"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"web_search","query":"live spot gold price USD per troy ounce now","action":{"type":"search","query":"live spot gold price USD per troy ounce now"}}}
+{"type":"item.completed","item":{"id":"item_1","type":"web_search","query":"https://goldprice.com/","action":{"type":"other"}}}
+{"type":"item.completed","item":{"id":"item_2","type":"agent_message","text":"Spot gold: US$4,159.48 per troy ounce. Source: https://goldprice.com/"}}
+{"type":"turn.completed","usage":{"input_tokens":33508,"cached_input_tokens":17664,"cache_write_input_tokens":0,"output_tokens":132,"reasoning_output_tokens":0}}

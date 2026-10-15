@@ -37,3 +37,52 @@ Filenames carry the transcript's own `generated_at` timestamp
   disputes surfaced), verdict converged, flash leg cost ~$0.01 on 6.8k
   tokens. Total ~$9.9 — cheaper than the 14:30 run despite the extra
   role (large run-to-run variance in Fable's search volume).
+- `20261014-214924-cli-claude-91-prime-debate.md` — first live run through a
+  command-line client (2026-10-14, cli-engines slice 1): three engines all
+  reached through the signed-in `claude` client, `cli-claude-fable-5-1` /
+  `cli-claude-sonnet-5` / `cli-claude-opus-5`, on a trivial arithmetic
+  question, 3 rotations, 1 round. `state=converged`, zero parse errors,
+  6 reasoned concessions / 0 capitulations, 12 client calls in 3m47s.
+  Usage as the client reports it: 28,360 input tokens (nearly all
+  cache creation), 14,926 output tokens, $0.69 at list
+  price under the subscription (fable-5-1 $0.35, sonnet-5 $0.11, opus-5 $0.23). Implementor validation; the
+  owner's mixed-route acceptance run is still to come.
+- `20261015-074404-cli-three-clients-91-prime-debate.md` — first live run across all
+  three command-line clients (2026-10-15, cli-engines slices 2 and 3):
+  `cli-claude-fable-5-1` through `claude`, `cli-gpt-6-astra` through
+  `codex`, `cli-gemini-3.8-flash` through `antigravity` (effort `high`
+  added by the engine), same trivial question as the slice-1 run, 3
+  rotations, 1 round. `state=converged`, zero parse errors, 2 reasoned
+  concessions / 0 capitulations, 12 client calls. Usage as each client
+  reports it: claude 3.6k input tokens over 4 calls at $0.15 estimated;
+  codex 53.0k input (32.5k cached, its own tool descriptions each call);
+  antigravity 60.2k input (its own agent prompt each call) and 8.4k
+  thinking tokens. The two clients without a price report none. This is
+  the acceptance evidence the slices 2 and 3 work order names.
+- `20261015-101604-NEM-gold-debasement-cli-debate.md` — first substantive question
+  through the three command-line clients (2026-10-15, owner's proposition:
+  the gold debasement trade still has legs and NEM will make new all-time
+  highs because the US deficit keeps dollar rates lagging the dollar's
+  depreciation). Engines `cli-claude-fable-5-1` / `cli-gpt-6-astra` /
+  `cli-gemini-4-argon-high`, no browsing (the client route cannot yet),
+  3 rotations, 1 round, 15m08s. `state=diverged`: two synthesizers report
+  converged, the codex one diverged. 22 reasoned concessions / 0
+  capitulations, zero parse errors. Usage as the clients report it: claude
+  18.9k output tokens at $1.25 estimated; codex 30.2k input / 3.1k output;
+  antigravity 78.1k input / 27.6k output with 17.2k thinking. Also the first
+  run after codex's tools were switched off in full: the first attempt was
+  rejected by the tool guard when the codex critic searched the web.
+- `20261015-130351-NEM-gold-debasement-cli-browse-debate.md` — the same NEM
+  proposition, same three clients, with browsing on by default (2026-10-15,
+  first run after the browsing change), 3 rotations, 1 round, 20m26s.
+  `state=diverged` again: two synthesizers converged, the codex one
+  diverged; 17 reasoned concessions / 0 capitulations, zero parse errors.
+  Browsing evidence as recorded: claude 22 web searches over 31 turns at
+  $2.87 estimated; codex 7 search items (169.3k input tokens); antigravity
+  128.0k input tokens and zero grounding links, the evidence floor at work
+  (fetched pages cite nothing). What the live data changed: the engines
+  now argue from an October 2026 tape, with NEM's all-time high placed at
+  $135.29 in August and gold about 26% off a January high near $5,589, so
+  the question became whether the stock regains a recent peak while the
+  debasement trade has been losing for nine months. The no-browse run of
+  the morning argued from a 2022 baseline. Compare the two.

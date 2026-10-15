@@ -1,9 +1,14 @@
-"""LangChain-backed engine construction. The only module that touches
-providers; imported lazily so the core stays dependency-free.
+"""Engine construction: the only module the protocol's callers go through
+to reach a mechanism. LangChain is imported lazily so the core stays
+dependency-free.
 
 Access-route decision (2026-08-23): LangChain chat-model abstractions give
 provider flexibility; model bindings are `provider:model` strings accepted
 by `langchain.chat_models.init_chat_model`.
+
+Second route (owner decision 2026-10-14): an item `cli-<model>` reaches the
+model through its vendor's signed-in command-line client, with no key; it
+resolves to `cli-<client>:<model>` and is built by `clients.py`.
 """
 
 from __future__ import annotations
@@ -12,6 +17,7 @@ import os
 import re
 from collections.abc import Mapping
 
+from rotated_debate import clients
 from rotated_debate.model import EngineSpec
 from rotated_debate.protocol import ChatFn
 
@@ -78,12 +84,25 @@ def parse_engine_args(raw: str) -> list[EngineSpec]:
 
 
 def resolve_model_id(spec: EngineSpec) -> str:
-    """Priority: env override > explicit binding > curated alias > name pattern."""
+    """Priority: env override > explicit binding > curated alias > name pattern.
+
+    A `cli-<model>` item, as the alias or as the binding, resolves to
+    `cli-<client>:<model>`; the typed name is its pin and no curated alias
+    applies to it. The environment override keeps its documented place: a
+    handle bound with `name=cli-...` is still overridden by
+    `ROTATED_DEBATE_MODEL_<NAME>` when that is set.
+    """
     env_override = os.environ.get(ENV_PREFIX + spec.alias.upper())
     if env_override:
+        if clients.is_client_item(env_override):
+            return clients.client_model_id(env_override, infer_provider)
         return env_override
     if spec.provider_model:
+        if clients.is_client_item(spec.provider_model):
+            return clients.client_model_id(spec.provider_model, infer_provider)
         return spec.provider_model
+    if clients.is_client_item(spec.alias):
+        return clients.client_model_id(spec.alias, infer_provider)
     if spec.alias in DEFAULT_MODELS:
         return DEFAULT_MODELS[spec.alias]
     provider = infer_provider(spec.alias)
@@ -93,29 +112,31 @@ def resolve_model_id(spec: EngineSpec) -> str:
         f"engine {spec.alias!r} has no model binding; use a vendor alias "
         f"({', '.join(sorted(DEFAULT_MODELS))}), a model name matching "
         f"claude-*/gemini-*/gpt-*/o<digit>*, the alias=provider:model form, "
+        f"cli-<model> for the vendor's command-line client, "
         f"or set {ENV_PREFIX}{spec.alias.upper()}"
     )
 
 
 # Per-engine consumption totals. Units are whatever the provider reports —
-# tokens for all current bindings, but nothing here assumes tokens: every
-# top-level integer field of the provider's usage report is summed as-is.
-UsageSink = dict[str, dict[str, int]]
+# tokens for all current bindings, a dollar cost where a client reports one —
+# but nothing here assumes tokens: every top-level numeric field of the
+# provider's usage report is summed as-is.
+UsageSink = dict[str, dict[str, int | float]]
 
 
 def record_usage(sink: UsageSink, alias: str, usage: Mapping[str, object] | None) -> None:
     """Fold one call's usage report into the per-engine sink.
 
-    Always counts the call; sums top-level integer fields (LangChain's
-    usage_metadata: input_tokens, output_tokens, total_tokens); skips
-    nested detail dicts and non-numeric fields.
+    Always counts the call; sums top-level numeric fields (LangChain's
+    usage_metadata: input_tokens, output_tokens, total_tokens; a client's
+    total_cost_usd); skips nested detail dicts and non-numeric fields.
     """
     entry = sink.setdefault(alias, {"calls": 0})
     entry["calls"] += 1
     if not usage:
         return
     for key, value in usage.items():
-        if isinstance(value, int) and not isinstance(value, bool):
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
             entry[key] = entry.get(key, 0) + value
 
 
@@ -146,14 +167,22 @@ def engine_labels(specs: list[EngineSpec]) -> dict[str, str]:
     """Alias -> reporting name: the bare model name, no provider prefix.
 
     Aliases stay the invocation-side interface (CLI, env overrides); all
-    reporting (progress, transcript, usage) uses these labels. If two
-    aliases resolve to the same model, every label falls back to
-    "alias=model" so keys stay unique.
+    reporting (progress, transcript, usage) uses these labels. A client
+    engine is labeled as typed, `cli-<model>`, so the same model by API and
+    by client in one debate stay distinct. If two aliases resolve to the
+    same label, every label falls back to "alias=model" so keys stay unique.
     """
-    labels = {spec.alias: resolve_model_id(spec).rpartition(":")[2] for spec in specs}
+    labels = {spec.alias: _label_for(resolve_model_id(spec)) for spec in specs}
     if len(set(labels.values())) != len(labels):
         labels = {alias: f"{alias}={label}" for alias, label in labels.items()}
     return labels
+
+
+def _label_for(model_id: str) -> str:
+    if clients.is_client_model_id(model_id):
+        _, model = clients.split_client_model_id(model_id)
+        return clients.CLI_PREFIX + model
+    return model_id.rpartition(":")[2]
 
 
 def _normalize_content(content: object) -> str:
@@ -174,10 +203,26 @@ def _normalize_content(content: object) -> str:
 def build_chat_fn(
     model_id: str,
     temperature: float | None,
-    browse: bool = False,
+    browse: bool | None = None,
     usage_sink: UsageSink | None = None,
     label: str | None = None,
 ) -> ChatFn:
+    sink_label = label if label is not None else model_id
+    if clients.is_client_model_id(model_id):
+        # Client engines browse by default (owner direction 2026-10-15):
+        # build_engines passes browse=True for them whatever --browse says.
+        # The last-synthesizer path passes browse=False, which the clients
+        # that can honor it do; see clients.build_client_chat_fn.
+        if temperature is not None:
+            raise SystemExit(
+                f"--temperature is not supported through command-line clients "
+                f"({sink_label}); omit it to use the client's default"
+            )
+        clients.check_available(model_id)
+        return clients.build_client_chat_fn(
+            model_id, usage_sink, sink_label, browse=browse is None or browse
+        )
+    browse = bool(browse)
     try:
         from langchain.chat_models import init_chat_model
     except ImportError as exc:  # pragma: no cover - environment-dependent
@@ -194,7 +239,6 @@ def build_chat_fn(
     model = init_chat_model(model_id, **extra)
     if browse:
         model = model.bind_tools(browse_tools_for(model_id))
-    sink_label = label if label is not None else model_id
 
     def chat(messages: list[tuple[str, str]]) -> str:
         response = model.invoke(messages)
@@ -214,15 +258,21 @@ def build_engines(
     usage_sink: UsageSink | None = None,
     browse: bool = False,
 ) -> dict[str, ChatFn]:
-    """Engines keyed by reporting label (see engine_labels), not alias."""
+    """Engines keyed by reporting label (see engine_labels), not alias.
+
+    Refusals come before any model call: a client not installed or not
+    signed in is refused by `build_chat_fn` as each engine is built. Client
+    engines browse by default, so `--browse` concerns the API engines only.
+    """
     labels = engine_labels(specs)
-    return {
-        labels[spec.alias]: build_chat_fn(
-            resolve_model_id(spec),
+    engines: dict[str, ChatFn] = {}
+    for spec in specs:
+        model_id = resolve_model_id(spec)
+        engines[labels[spec.alias]] = build_chat_fn(
+            model_id,
             temperature,
-            browse=browse,
+            browse=browse or clients.is_client_model_id(model_id),
             usage_sink=usage_sink,
             label=labels[spec.alias],
         )
-        for spec in specs
-    }
+    return engines
