@@ -114,6 +114,23 @@ built-in tool feature off, the shell included; the client's own prompt
 drops to about 4,600 tokens. The rerun completed: `state=diverged`, 22
 reasoned concessions, zero parse errors, 15 minutes.
 
+Browsing research and change, 2026-10-15 (owner's question, then
+direction), commit `8e7f374` on `ws-cli-engines/v0-clients`, in pull
+request #2: each client's browsing switch found against its installed
+help and vendor documentation and probed live. `claude`: `--tools
+"WebSearch,WebFetch"` plus `--allowedTools` the same, since print mode
+cannot answer a permission prompt. `codex`: the `web_search` key,
+`disabled`, `cached` (default), `indexed`, `live`; `--search` is a
+top-level flag `exec` rejects. `antigravity`: Google Search grounding is
+model-side, governed by an account-level `cascade_web_search_enabled`
+setting with no per-run flag; a deny-everything settings file still
+grounded. Found on the way: the owner's own antigravity settings allow
+every tool unprompted, so the engine now runs with a private home (token
+link plus its own settings, `always-proceed` with a deny list; `strict`
+auto-denied the URL read and returned an empty answer, now an error that
+carries stderr). Three real calls through the code path, each demanding
+a search, answered with a live price and a source.
+
 Slice 1 below, awaiting the owner's pull request.
 
 Slice 1, the `claude` client engine, implemented on 2026-10-14 under the
@@ -283,12 +300,20 @@ that were rejected so they are not re-proposed.
 2. **Pinned models: none for client engines.** Follows from 1: the full
    name typed is the pin, auditable in the transcript. The 2026-08-27 pins
    for the API aliases are untouched.
-3. **Browsing: refused on client engines in the first slices.** `--browse`
-   with a `cli-` engine stops before any call, naming the engine. Mapping
-   it onto each client's own web tool is a later slice, if wanted.
-   Rejected for now: allowing the `claude` client's web search in slice 1,
-   so that the first client transcripts compare like for like with API
-   transcripts without browsing.
+3. **Browsing: on by default for client engines** (owner direction
+   2026-10-15, superseding the refusal decided 2026-10-14 after the
+   research record below). `claude` runs with its `WebSearch` and
+   `WebFetch` tools allowed; `codex` with `web_search="live"`;
+   `antigravity` with a private home that allows URL reads and denies
+   everything else, beside the Google Search grounding its account
+   setting enables. `--browse` concerns API engines only. A later slice
+   adds the switch to turn client browsing off. Evidence recorded as
+   usage: `web_search_requests` for `claude` and `codex`,
+   `grounding_links` for `antigravity`, a floor since a fetched answer
+   may cite none. Commit `8e7f374`. Superseded: the 2026-10-14 reasoning
+   that unbrowsed client transcripts compare like for like with unbrowsed
+   API transcripts; the owner weighs live facts higher after the NEM
+   debate argued from stale baselines.
 4. **Usage: recorded as the client reports it**, under the engine's key in
    the same usage sink, with the client named as the source; the `claude`
    client's dollar cost and `codex`'s reasoning tokens included, nothing
