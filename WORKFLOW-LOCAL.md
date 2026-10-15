@@ -52,6 +52,44 @@ Run all commands from the repository root.
   when packaging changes; live validation is required for provider behavior
   that the offline tests cannot establish.
 
+## GitHub CLI
+
+Pull requests, review comments and merges go through the GitHub CLI, `gh`,
+which the owner installed by hand on 2026-10-15 until the capsule provides
+it as a capability (requested from DevCapsule the same day). The rule:
+
+- **Where it is.** In the conda environment `gh` under
+  `/opt/xtras/miniconda3`. Every shell that needs it runs, first:
+
+  ```text
+  source /opt/xtras/miniconda3/etc/profile.d/conda.sh && conda activate gh
+  ```
+
+  An agent's tool shells do not persist state between commands, so the
+  line is repeated in each command that calls `gh`. Nothing in the
+  repository depends on the environment otherwise; leave the project
+  `.venv` as it is.
+- **Whose sign-in.** The owner's, made once with `gh auth login` over the
+  web flow with the `repo` scope; the token lives in the owner's home
+  under `.config/gh/`, outside the repository, and is never copied into
+  configuration or records. `gh auth status` is the check at session
+  start; a signed-out `gh` is a blocker to report, not a reason to find
+  another route.
+- **What an agent does with it.** Opens the pull request for a slice with
+  the body from the workstream's pull-request note; opens the reviewer's
+  stacked pull request or, when the review branch is already merged,
+  posts the reviewer's report as a comment; posts each round's assessment
+  as a comment labeled by pair; reads review comments; retargets a stacked
+  pull request after its base merges; records pull-request numbers in the
+  status file. All of this is ordinary agent work under *Delivery And
+  Review*.
+- **What stays with the owner.** The merge to `main`, as a merge commit,
+  unless the owner directs the agent to merge in a given case. An agent
+  never squashes, rebases through the platform, deletes a branch the
+  workflow names, or changes repository settings.
+- **Ends when** the capsule carries a `github-cli` capability with its own
+  sign-in binding; this section is then rewritten for it.
+
 ## Host Capabilities
 
 What the project needs from the machine and the hosting service that the
