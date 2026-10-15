@@ -344,6 +344,41 @@ class RefusalTests(FakeClientMixin, unittest.TestCase):
         build_chat_fn("cli-antigravity:gemini-3.8-flash", None, label="x")
         self.assertEqual([c["argv"] for c in self.calls()], [["models"]])
 
+    def test_antigravity_preflight_matches_the_requested_effort_or_exact_id(self) -> None:
+        cases = (
+            ("gemini-3.8-flash", "gemini-3.8-flash", True),
+            ("gemini-3.8-flash", "gemini-3.8-flash-high", True),
+            ("gemini-3.8-flash", "gemini-3.8-flash-low", False),
+            ("gemini-3.8-flash", "gemini-3.8-flash-medium", False),
+            ("gemini-3.8-flash-low", "gemini-3.8-flash-low", True),
+            ("gemini-3.8-flash-high", "gemini-3.8-flash-low", False),
+        )
+        for model, listed, accepted in cases:
+            with self.subTest(model=model, listed=listed):
+                def run(command, listed=listed, **kwargs):
+                    return subprocess.CompletedProcess(
+                        command, 0, stdout=f"{listed}\tDisplay name\n", stderr=""
+                    )
+
+                if accepted:
+                    clients.check_available(f"cli-antigravity:{model}", run=run)
+                else:
+                    with self.assertRaisesRegex(SystemExit, "does not list"):
+                        clients.check_available(f"cli-antigravity:{model}", run=run)
+        self.assertEqual(self.calls(), [])
+
+    def test_antigravity_empty_and_error_listings_are_refused(self) -> None:
+        listing = (ANTIGRAVITY_FIXTURES / "models.txt").read_text(encoding="utf-8")
+        for code, stdout in ((0, ""), (0, "Fetching available models...\n"),
+                             (0, "Error: not signed in\n"), (1, listing)):
+            with self.subTest(code=code, stdout=stdout):
+                def run(command, code=code, stdout=stdout, **kwargs):
+                    return subprocess.CompletedProcess(command, code, stdout=stdout, stderr="")
+
+                with self.assertRaisesRegex(SystemExit, "antigravity.*not signed in"):
+                    clients.check_available("cli-antigravity:gemini-3.8-flash", run=run)
+        self.assertEqual(self.calls(), [])
+
 
 class ClaudeCallTests(FakeClientMixin, unittest.TestCase):
     def test_unicode_round_trip_in_an_ascii_locale(self) -> None:
@@ -610,9 +645,19 @@ class AntigravityCallTests(FakeClientMixin, unittest.TestCase):
 
     def test_error_status_is_an_error_naming_the_client(self) -> None:
         error = (ANTIGRAVITY_FIXTURES / "print-error.json").read_text(encoding="utf-8")
+
+        def run(command, **kwargs):
+            return subprocess.CompletedProcess(command, 0, stdout=error, stderr="")
+
+        sink: dict = {}
+        chat = clients.build_client_chat_fn(
+            "cli-antigravity:gemini-3.8-flash", sink, "x", run=run
+        )
         with self.assertRaises(RuntimeError) as ctx:
-            clients._parse_antigravity_result("x", error)
+            chat([("system", "s"), ("user", "u")])
         self.assertIn("requires --effort", str(ctx.exception))
+        self.assertIn("antigravity", str(ctx.exception))
+        self.assertEqual(sink, {})
 
     def test_model_ids_parse_from_the_listing(self) -> None:
         listing = (ANTIGRAVITY_FIXTURES / "models.txt").read_text(encoding="utf-8")

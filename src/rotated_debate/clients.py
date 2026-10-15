@@ -223,7 +223,8 @@ def antigravity_model_ids(listing: str) -> list[str]:
 def _antigravity_candidates(model: str) -> list[str]:
     if model.endswith(tuple(f"-{effort}" for effort in ANTIGRAVITY_EFFORTS)):
         return [model]
-    return [f"{model}-{effort}" for effort in ANTIGRAVITY_EFFORTS]
+    # Match the exact id or the effort the command will actually request.
+    return [model, f"{model}-{ANTIGRAVITY_DEFAULT_EFFORT}"]
 
 
 def _check_antigravity_signed_in(executable: str, model: str, run: Runner) -> None:
