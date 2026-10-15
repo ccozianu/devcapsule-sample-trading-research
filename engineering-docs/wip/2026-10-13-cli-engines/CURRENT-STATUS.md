@@ -11,7 +11,7 @@ the access route changes.
 
 State: `active; pull requests #1 and #2 open, awaiting the owner's acceptance run and merges`
 
-Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@426b1fa5ef12
+Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@218899e8b479
 
 Branch prefix: `ws-cli-engines/`
 
