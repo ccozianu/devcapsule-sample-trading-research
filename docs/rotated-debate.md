@@ -108,13 +108,13 @@ Each item can be, in order of resolution priority:
    - `claude`: the role prompt replaces its system prompt; no built-in
      tools, no MCP servers, no settings files, no saved session.
    - `codex`: the role prompt replaces its built-in instructions through
-     an instructions file; read-only sandbox; ephemeral; hosted web
-     search off; no rules; a private home holding only a link to your
-     sign-in file, so your global `AGENTS.md`, config and MCP servers do
-     not reach the engine. Its tool descriptions stay in the prompt
-     (about 9,000 tokens per call), and the model may still run
-     read-only commands in the empty directory; if it does, the call
-     fails rather than pass a tool-assisted answer as a chat answer.
+     an instructions file; read-only sandbox; ephemeral; no rules; the
+     hosted web search and every built-in tool switched off, the shell
+     included; a private home holding only a link to your sign-in file,
+     so your global `AGENTS.md`, config and MCP servers do not reach the
+     engine. About 4,600 tokens of its own per call remain. Should a tool
+     item still appear in its event stream, the call fails rather than
+     pass a tool-assisted answer as a chat answer.
    - `antigravity`: no instruction flag, so the role prompt is prepended
      to the prompt; `--sandbox` restricts its terminal, and no switch
      turns its tools off. Its own agent prompt stays (about 14,600 tokens

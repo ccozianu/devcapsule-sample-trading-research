@@ -89,6 +89,31 @@ INSTRUCTION_MARKERS = ("CLAUDE.md", ".claude", "AGENTS.md", ".codex")
 # letting a tool-assisted answer pass as a chat answer.
 CODEX_TALK_ITEMS = {"agent_message", "reasoning"}
 CODEX_HOME_ENV = "CODEX_HOME"
+# Codex configuration that leaves the model no tool at all, probed on
+# 2026-10-15 against 0.153.4: `web_search="disabled"` turns the hosted search
+# off (`tools.web_search=false` does not: a live debate was rejected by the
+# tool guard when the critic searched); with it off the model reached for the
+# built-in apps MCP server (`codex_apps search_service.web_run`), so the
+# feature switches below remove that and every other built-in tool,
+# including the shell. With these, a prompt demanding a web search gets
+# "I don't have web access", a prompt asking to list files gets no command,
+# and the prompt shrinks from about 9,400 to about 4,600 input tokens.
+CODEX_TOOLS_OFF = (
+    'web_search="disabled"',
+    "features.apps=false",
+    "features.browser_use=false",
+    "features.browser_use_external=false",
+    "features.computer_use=false",
+    "features.shell_tool=false",
+    "features.multi_agent=false",
+    "features.image_generation=false",
+    "features.plugins=false",
+    "features.remote_plugin=false",
+    "features.skill_search=false",
+    "features.tool_suggest=false",
+    "features.goals=false",
+    "features.hooks=false",
+)
 
 Runner = Callable[..., "subprocess.CompletedProcess[str]"]
 
@@ -360,18 +385,18 @@ def codex_command(executable: str, model: str, workdir: str, instructions: str) 
     the empty working directory and `--skip-git-repo-check` lets it run
     there; `-s read-only` is the tightest sandbox the client offers, and the
     directory is empty anyway; `--ephemeral` persists no session;
-    `--ignore-rules` loads no execution-policy rules; `tools.web_search=false`
-    turns the hosted web search off; `model_instructions_file` replaces the
+    `--ignore-rules` loads no execution-policy rules; `CODEX_TOOLS_OFF`
+    removes the hosted web search and every built-in tool, the shell
+    included; `model_instructions_file` replaces the
     client's built-in instructions with the engine's system prompt (measured
     9,345 input tokens against 14,283 without, on this version). The client
     still reads `AGENTS.md` from its home directory whatever these say
     (measured: a planted marker was obeyed under `--ignore-user-config` and
     `project_doc_max_bytes=0` alike), so the call runs with a private
-    `CODEX_HOME`; see `codex_home`. The client's own tool descriptions remain
-    in the prompt, and the model may still run read-only commands in the
-    empty directory; a tool item in the event stream fails the call.
+    `CODEX_HOME`; see `codex_home`. Should a tool item still appear in the
+    event stream, the call fails rather than pass a tool-assisted answer.
     """
-    return [
+    command = [
         executable,
         "exec",
         "--json",
@@ -386,10 +411,10 @@ def codex_command(executable: str, model: str, workdir: str, instructions: str) 
         model,
         "-c",
         f"model_instructions_file={instructions}",
-        "-c",
-        "tools.web_search=false",
-        "-",
     ]
+    for setting in CODEX_TOOLS_OFF:
+        command += ["-c", setting]
+    return command + ["-"]
 
 
 def codex_home(workdir: str) -> Path:
