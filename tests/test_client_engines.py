@@ -49,7 +49,7 @@ stdin = "" if sys.argv[1:3] == ["login", "status"] else sys.stdin.read()
 if log:
     with open(log, "a", encoding="utf-8") as fh:
         fh.write(json.dumps({"client": "codex", "argv": sys.argv[1:], "stdin": stdin,
-                             "cwd": os.getcwd(),
+                             "cwd": os.getcwd(), "codex_home": os.environ.get("CODEX_HOME"),
                              "key_vars": sorted(k for k in os.environ
                                                 if k.endswith("_API_KEY"))}) + "\n")
 if sys.argv[1:3] == ["login", "status"]:
@@ -517,12 +517,40 @@ class CodexCallTests(FakeClientMixin, unittest.TestCase):
         self.assertIn("--ephemeral", argv)
         self.assertIn("--json", argv)
         self.assertEqual(argv[-1], "-")
+        self.assertIn("--ignore-rules", argv)
+        self.assertIn("tools.web_search=false", argv)
         self.assertEqual(call["stdin"], "Critique this.")
         workdir = Path(argv[argv.index("-C") + 1])
         self.assertEqual(Path(call["cwd"]).resolve(), workdir.resolve())
         instructions = argv[argv.index("-c") + 1].removeprefix("model_instructions_file=")
         self.assertEqual(Path(instructions).read_text(encoding="utf-8"), "You are the CRITIC.")
         self.assertEqual(Path(instructions).parent, workdir)
+
+    def test_codex_runs_with_a_private_home_linking_only_the_sign_in_file(self) -> None:
+        real_home = Path(self._tmp.name) / "real-codex-home"
+        real_home.mkdir()
+        (real_home / "auth.json").write_text("{}", encoding="utf-8")
+        (real_home / "AGENTS.md").write_text("planted", encoding="utf-8")
+        with patch.dict(os.environ, {"CODEX_HOME": str(real_home)}):
+            chat = build_chat_fn("cli-codex:gpt-6-astra", None, label="x")
+            chat([("system", "s"), ("user", "u")])
+        call = [c for c in self.calls() if c["argv"][:1] == ["exec"]][-1]
+        home = Path(call["codex_home"])
+        self.assertEqual(home.parent.resolve(), Path(call["cwd"]).resolve())
+        self.assertEqual([p.name for p in home.iterdir()], ["auth.json"])
+        self.assertEqual((home / "auth.json").resolve(), (real_home / "auth.json").resolve())
+        self.assertFalse((home / "AGENTS.md").exists())
+
+    def test_a_tool_item_in_the_stream_fails_the_call(self) -> None:
+        events = (CODEX_FIXTURES / "exec-events.jsonl").read_text(encoding="utf-8")
+        tool = json.dumps({"type": "item.completed", "item": {"type": "command_execution",
+                                                                "command": "ls"}})
+        with self.assertRaisesRegex(RuntimeError, "used a tool.*command_execution"):
+            clients._parse_codex_events("x", tool + "\n" + events)
+        reasoning = json.dumps({"type": "item.completed", "item": {"type": "reasoning",
+                                                                     "text": "hmm"}})
+        text, _ = clients._parse_codex_events("x", reasoning + "\n" + events)
+        self.assertEqual(text, "pong")
 
     def test_usage_comes_from_the_turn_completed_event(self) -> None:
         sink: dict = {}
@@ -542,7 +570,10 @@ class CodexCallTests(FakeClientMixin, unittest.TestCase):
         def run(command, **kwargs):
             instructions = Path(kwargs["cwd"]) / "instructions.md"
             observed.append(instructions.read_text(encoding="utf-8"))
-            self.assertEqual(list(instructions.parent.iterdir()), [instructions])
+            self.assertEqual(
+                sorted(p.name for p in instructions.parent.iterdir()),
+                ["codex-home", "instructions.md"],
+            )
             return subprocess.CompletedProcess(
                 command, 0,
                 stdout=(CODEX_FIXTURES / "exec-events.jsonl").read_text(encoding="utf-8"),

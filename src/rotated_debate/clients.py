@@ -16,7 +16,9 @@ Three clients, one per vendor, probed on 2026-10-14 and 2026-10-15:
 - `claude` 2.1.261 (Anthropic): `-p`, JSON result, `--system-prompt`
   replaces its agent prompt, `--tools ""`, no MCP, no settings files.
 - `codex` 0.153.4 (OpenAI): `exec --json`, a replacement instructions
-  file carries the system prompt, read-only sandbox, ephemeral.
+  file carries the system prompt, read-only sandbox, ephemeral, a private
+  `CODEX_HOME` holding only a link to the sign-in file so that no global
+  instructions, user config, MCP servers or rules reach the engine.
 - `antigravity` 1.1.24 (Google): prompt on stdin, JSON result; it has no
   instruction flag, so the system prompt is prepended to the prompt; its
   model ids carry an effort level and one is added when the id has none.
@@ -82,6 +84,11 @@ ANTIGRAVITY_DEFAULT_EFFORT = "high"
 # Files whose presence in an ancestor directory means a client would load
 # instructions from there; the empty working directory must have none.
 INSTRUCTION_MARKERS = ("CLAUDE.md", ".claude", "AGENTS.md", ".codex")
+# Codex event items that are not the model talking: a tool was used. The
+# engine is a plain chat engine, so any of these fails the call rather than
+# letting a tool-assisted answer pass as a chat answer.
+CODEX_TALK_ITEMS = {"agent_message", "reasoning"}
+CODEX_HOME_ENV = "CODEX_HOME"
 
 Runner = Callable[..., "subprocess.CompletedProcess[str]"]
 
@@ -353,10 +360,16 @@ def codex_command(executable: str, model: str, workdir: str, instructions: str) 
     the empty working directory and `--skip-git-repo-check` lets it run
     there; `-s read-only` is the tightest sandbox the client offers, and the
     directory is empty anyway; `--ephemeral` persists no session;
-    `model_instructions_file` replaces the client's built-in instructions
-    with the engine's system prompt (measured 9,345 input tokens against
-    14,283 without, on this version). The client's own tool descriptions
-    remain in the prompt; there is no flag to drop them.
+    `--ignore-rules` loads no execution-policy rules; `tools.web_search=false`
+    turns the hosted web search off; `model_instructions_file` replaces the
+    client's built-in instructions with the engine's system prompt (measured
+    9,345 input tokens against 14,283 without, on this version). The client
+    still reads `AGENTS.md` from its home directory whatever these say
+    (measured: a planted marker was obeyed under `--ignore-user-config` and
+    `project_doc_max_bytes=0` alike), so the call runs with a private
+    `CODEX_HOME`; see `codex_home`. The client's own tool descriptions remain
+    in the prompt, and the model may still run read-only commands in the
+    empty directory; a tool item in the event stream fails the call.
     """
     return [
         executable,
@@ -364,6 +377,7 @@ def codex_command(executable: str, model: str, workdir: str, instructions: str) 
         "--json",
         "--ephemeral",
         "--skip-git-repo-check",
+        "--ignore-rules",
         "-s",
         "read-only",
         "-C",
@@ -372,8 +386,25 @@ def codex_command(executable: str, model: str, workdir: str, instructions: str) 
         model,
         "-c",
         f"model_instructions_file={instructions}",
+        "-c",
+        "tools.web_search=false",
         "-",
     ]
+
+
+def codex_home(workdir: str) -> Path:
+    """A private home for the call: a directory under the engine's own with
+    one entry, a link to the real home's sign-in file. The help says auth
+    still uses `CODEX_HOME`, and a probe confirmed the sign-in holds through
+    the link while the real home's `AGENTS.md`, `config.toml` (and so its
+    MCP servers) and rules are not read. Nothing is copied; the client
+    writes its caches here and they die with the directory."""
+    real_home = Path(os.environ.get(CODEX_HOME_ENV) or Path.home() / ".codex")
+    home = Path(workdir) / "codex-home"
+    if not home.exists():
+        home.mkdir()
+        (home / "auth.json").symlink_to(real_home / "auth.json")
+    return home
 
 
 def _parse_codex_events(label: str, stdout: str) -> tuple[str, dict[str, object]]:
@@ -395,9 +426,14 @@ def _parse_codex_events(label: str, stdout: str) -> tuple[str, dict[str, object]
         kind = event.get("type")
         if kind == "item.completed":
             item = event.get("item")
-            if isinstance(item, Mapping) and item.get("type") == "agent_message":
-                if isinstance(item.get("text"), str):
-                    text = item["text"]
+            item_type = item.get("type") if isinstance(item, Mapping) else None
+            if item_type not in CODEX_TALK_ITEMS:
+                raise RuntimeError(
+                    f"{label}: the codex client used a tool ({item_type!r}); client "
+                    f"engines are plain chat engines, so the call is not accepted"
+                )
+            if item_type == "agent_message" and isinstance(item.get("text"), str):
+                text = item["text"]
         elif kind == "turn.completed":
             turn_completed = True
             reported = event.get("usage")
@@ -489,6 +525,7 @@ def build_client_chat_fn(
 
     def chat(messages: list[prompts.Message]) -> str:
         system_prompt, prompt = _split_messages(messages)
+        env = client_env()
         if client == "claude":
             command = claude_command(executable, model, system_prompt)
             stdin_text = prompt
@@ -496,6 +533,7 @@ def build_client_chat_fn(
             instructions = Path(workdir.name) / "instructions.md"
             instructions.write_text(system_prompt, encoding="utf-8")
             command = codex_command(executable, model, workdir.name, str(instructions))
+            env[CODEX_HOME_ENV] = str(codex_home(workdir.name))
             stdin_text = prompt
         else:
             command = antigravity_command(executable, model)
@@ -509,7 +547,7 @@ def build_client_chat_fn(
                 encoding="utf-8",
                 timeout=timeout,
                 check=False,
-                env=client_env(),
+                env=env,
                 cwd=workdir.name,
             )
         except subprocess.TimeoutExpired as exc:
