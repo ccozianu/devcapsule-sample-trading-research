@@ -106,8 +106,8 @@ Each item can be, in order of resolution priority:
    its environment, so an exported key cannot take over the billing.
 
    **Client engines browse by default.** Unlike the API route, where
-   `--browse` turns searching on, a `cli-` engine always has its client's
-   web access; a later slice adds the switch to turn it off. `--browse`
+   `--browse` turns searching on, a `cli-` engine enables the web access
+   described below; a later slice adds the switch to turn it off. `--browse`
    therefore concerns the API engines in the lineup only. What each
    client does, and what the transcript records as evidence:
 
@@ -115,7 +115,8 @@ Each item can be, in order of resolution priority:
      `WebSearch` and `WebFetch` tools, allowed without prompts; no other
      built-in tools, no MCP servers, no settings files, no saved session.
      Evidence: `web_search_requests` summed from the client's per-model
-     report, and `num_turns`, since fetches have no counter.
+     report, and `num_turns`. Fetches have no dedicated counter; the turn
+     count alone does not establish that a fetch occurred.
    - `codex`: the role prompt replaces its built-in instructions through
      an instructions file; read-only sandbox; ephemeral; no rules; hosted
      web search set to `live`; every other built-in tool switched off, the
@@ -131,13 +132,15 @@ Each item can be, in order of resolution priority:
      grounding, a model-side feature governed by an account-level setting
      in the client, not by any flag or permission: it browses when that
      setting is on. Evidence: `grounding_links`, the count of grounding
-     redirect links in the answer, plus `num_turns`.
+     redirect marker occurrences in the answer, plus `num_turns`. This is
+     a floor on visible browsing evidence: a fetched answer may cite none,
+     so zero does not establish that browsing was absent. Repeated links
+     count again; this is neither a search count nor a unique-source count.
 
    Managed organization settings, if a client has any, still apply. If
    `TMPDIR` points inside a project, the engine refuses rather than let a
-   client read that project's instructions. `--browse`
-   and `--temperature` are not available on this route and refuse, naming
-   the engine. Routes mix freely:
+   client read that project's instructions. `--temperature` is not
+   available on this route and refuses, naming the engine. Routes mix freely:
    `--engines cli-claude-fable-5-1,gemini,chatgpt` is a normal debate. One
    client call may take up to ten minutes (`ROTATED_DEBATE_CLIENT_TIMEOUT`
    seconds overrides).
@@ -159,7 +162,7 @@ so the same model by API and by client in one debate stay distinct.
 | `--rounds N` | 1 | Critique→rebuttal exchanges per rotation before synthesis. |
 | `--browse` | off | Give every API engine its vendor's server-side web-search tool (Anthropic web search, OpenAI web search via the Responses API, Google Search grounding). Search runs on the provider's servers and is billed per search, on top of tokens; Anthropic searches are capped at 5 per call. Only works for providers with a known browse tool (currently the three above) — others error. `cli-` engines browse by default and ignore the flag. |
 | `--temperature T` | provider default | Only sent when set. Current Anthropic and OpenAI models reject an explicit temperature — leave unset unless you know the model accepts it. Client engines refuse this flag, including a client used as the last synthesizer; omit it to use the client's default. |
-| `--add-last-synthesizer MODEL` | off | Add a final synthesis over the rotation syntheses, produced by `MODEL` (any form `--engines` items accept, e.g. `gemini-3.7-flash`). The last synthesizer is a judge of the record, not a participant: it **never browses**, is instructed to use only the text at hand, and reports agreement/disagreement on facts and on reasoning separately. Its verdict is recorded alongside the others in `outcome_state` — it does not change the reported `state=` line. |
+| `--add-last-synthesizer MODEL` | off | Add a final synthesis over the rotation syntheses, produced by `MODEL` (any form `--engines` items accept, e.g. `gemini-3.7-flash`). The last synthesizer is instructed to judge only the text at hand without researching and reports agreement/disagreement on facts and on reasoning separately. API engines receive no browsing tool in this role. A client engine currently retains its default web access, so the no-research instruction is not enforced by disabling tools. Use an API engine when that restriction must be enforced. Its verdict is recorded alongside the others in `outcome_state` — it does not change the reported `state=` line. |
 | `--out FILE` | `debate-<timestamp>.md` | Transcript path. The only file the command writes. |
 
 ## The transcript

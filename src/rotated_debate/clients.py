@@ -14,7 +14,8 @@ parsing and transcript modules do not know this module exists;
 Three clients, one per vendor, probed on 2026-10-14 and 2026-10-15:
 
 - `claude` 2.1.261 (Anthropic): `-p`, JSON result, `--system-prompt`
-  replaces its agent prompt, `--tools ""`, no MCP, no settings files.
+  replaces its agent prompt, WebSearch and WebFetch allowed, no MCP,
+  no user/project/local settings files.
 - `codex` 0.153.4 (OpenAI): `exec --json`, a replacement instructions
   file carries the system prompt, read-only sandbox, ephemeral, a private
   `CODEX_HOME` holding only a link to the sign-in file so that no global
