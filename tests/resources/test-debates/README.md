@@ -59,3 +59,16 @@ Filenames carry the transcript's own `generated_at` timestamp
   antigravity 60.2k input (its own agent prompt each call) and 8.4k
   thinking tokens. The two clients without a price report none. This is
   the acceptance evidence the slices 2 and 3 work order names.
+- `20261015-101604-NEM-gold-debasement-cli-debate.md` — first substantive question
+  through the three command-line clients (2026-10-15, owner's proposition:
+  the gold debasement trade still has legs and NEM will make new all-time
+  highs because the US deficit keeps dollar rates lagging the dollar's
+  depreciation). Engines `cli-claude-fable-5-1` / `cli-gpt-6-astra` /
+  `cli-gemini-4-argon-high`, no browsing (the client route cannot yet),
+  3 rotations, 1 round, 15m08s. `state=diverged`: two synthesizers report
+  converged, the codex one diverged. 22 reasoned concessions / 0
+  capitulations, zero parse errors. Usage as the clients report it: claude
+  18.9k output tokens at $1.25 estimated; codex 30.2k input / 3.1k output;
+  antigravity 78.1k input / 27.6k output with 17.2k thinking. Also the first
+  run after codex's tools were switched off in full: the first attempt was
+  rejected by the tool guard when the codex critic searched the web.

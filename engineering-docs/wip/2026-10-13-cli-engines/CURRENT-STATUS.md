@@ -104,6 +104,16 @@ Judgments taken in slices 2 and 3, for the owner's review:
   stream fails the call. Antigravity has no tools-off switch; its
   `num_turns` is the evidence.
 
+Found by the first substantive debate on 2026-10-15 (the owner's NEM
+proposition, retained as
+`tests/resources/test-debates/20261015-101604-NEM-gold-debasement-cli-debate.md`):
+`tools.web_search=false` did not switch codex's hosted search off; the
+tool guard rejected the call, as designed. Probed and fixed in `1c66da6`
+on the branch and in pull request #2: `web_search="disabled"` plus every
+built-in tool feature off, the shell included; the client's own prompt
+drops to about 4,600 tokens. The rerun completed: `state=diverged`, 22
+reasoned concessions, zero parse errors, 15 minutes.
+
 Slice 1 below, awaiting the owner's pull request.
 
 Slice 1, the `claude` client engine, implemented on 2026-10-14 under the
