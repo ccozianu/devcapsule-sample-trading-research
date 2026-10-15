@@ -1,4 +1,4 @@
-# Note: pull-request body for slices 2 and 3
+# Note: pull-request body (opened 2026-10-15 as #2) for slices 2 and 3
 
 For the owner to paste when opening the stacked pull request. The base
 is the slice-1 branch, so GitHub shows only this slice's diff while slice

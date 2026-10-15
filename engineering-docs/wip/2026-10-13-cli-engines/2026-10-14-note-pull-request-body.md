@@ -1,4 +1,4 @@
-# Note: pull-request body for slice 1
+# Note: pull-request body (opened 2026-10-15 as #1) for slice 1
 
 The GitHub CLI is not installed in the capsule and no token is present, so
 the owner opens the pull request from the pushed branch. This is the body
