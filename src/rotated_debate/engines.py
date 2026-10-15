@@ -203,21 +203,26 @@ def _normalize_content(content: object) -> str:
 def build_chat_fn(
     model_id: str,
     temperature: float | None,
-    browse: bool = False,
+    browse: bool | None = None,
     usage_sink: UsageSink | None = None,
     label: str | None = None,
 ) -> ChatFn:
     sink_label = label if label is not None else model_id
     if clients.is_client_model_id(model_id):
-        # Client engines browse by default (owner direction 2026-10-15);
-        # --browse neither adds nor removes anything for them.
+        # Client engines browse by default (owner direction 2026-10-15):
+        # build_engines passes browse=True for them whatever --browse says.
+        # The last-synthesizer path passes browse=False, which the clients
+        # that can honor it do; see clients.build_client_chat_fn.
         if temperature is not None:
             raise SystemExit(
                 f"--temperature is not supported through command-line clients "
                 f"({sink_label}); omit it to use the client's default"
             )
         clients.check_available(model_id)
-        return clients.build_client_chat_fn(model_id, usage_sink, sink_label)
+        return clients.build_client_chat_fn(
+            model_id, usage_sink, sink_label, browse=browse is None or browse
+        )
+    browse = bool(browse)
     try:
         from langchain.chat_models import init_chat_model
     except ImportError as exc:  # pragma: no cover - environment-dependent
@@ -260,13 +265,14 @@ def build_engines(
     engines browse by default, so `--browse` concerns the API engines only.
     """
     labels = engine_labels(specs)
-    return {
-        labels[spec.alias]: build_chat_fn(
-            resolve_model_id(spec),
+    engines: dict[str, ChatFn] = {}
+    for spec in specs:
+        model_id = resolve_model_id(spec)
+        engines[labels[spec.alias]] = build_chat_fn(
+            model_id,
             temperature,
-            browse=browse,
+            browse=browse or clients.is_client_model_id(model_id),
             usage_sink=usage_sink,
             label=labels[spec.alias],
         )
-        for spec in specs
-    }
+    return engines

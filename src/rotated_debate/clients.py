@@ -345,7 +345,9 @@ def _instruction_free_directory() -> tempfile.TemporaryDirectory[str]:
 # ---- claude ---------------------------------------------------------------
 
 
-def claude_command(executable: str, model: str, system_prompt: str) -> list[str]:
+def claude_command(
+    executable: str, model: str, system_prompt: str, browse: bool = True
+) -> list[str]:
     """The exact call, probed against claude 2.1.261 on 2026-10-14 and 15.
 
     The prompt travels on stdin so a large context packet never hits the
@@ -375,9 +377,9 @@ def claude_command(executable: str, model: str, system_prompt: str) -> list[str]
         "--system-prompt",
         system_prompt,
         "--tools",
-        "WebSearch,WebFetch",
+        "WebSearch,WebFetch" if browse else "",
         "--allowedTools",
-        "WebSearch,WebFetch",
+        "WebSearch,WebFetch" if browse else "",
         "--no-session-persistence",
         "--setting-sources",
         "",
@@ -425,7 +427,9 @@ def claude_usage(report: Mapping[str, object]) -> dict[str, object]:
 # ---- codex ----------------------------------------------------------------
 
 
-def codex_command(executable: str, model: str, workdir: str, instructions: str) -> list[str]:
+def codex_command(
+    executable: str, model: str, workdir: str, instructions: str, browse: bool = True
+) -> list[str]:
     """The exact call, probed against codex 0.153.4 on 2026-10-15.
 
     `exec` runs one turn and exits; `--json` streams events, the last of
@@ -461,6 +465,8 @@ def codex_command(executable: str, model: str, workdir: str, instructions: str) 
         f"model_instructions_file={instructions}",
     ]
     for setting in CODEX_SETTINGS:
+        if not browse and setting.startswith("web_search="):
+            setting = 'web_search="disabled"'
         command += ["-c", setting]
     return command + ["-"]
 
@@ -480,10 +486,13 @@ def codex_home(workdir: str) -> Path:
     return home
 
 
-def _parse_codex_events(label: str, stdout: str) -> tuple[str, dict[str, object]]:
+def _parse_codex_events(
+    label: str, stdout: str, browse: bool = True
+) -> tuple[str, dict[str, object]]:
     """Use the last agent message only after a completed turn. Malformed
     events and explicit failures invalidate the response, even after text.
-    Each `web_search` item is counted as the browsing evidence."""
+    Each `web_search` item is counted as the browsing evidence; with
+    browsing off, one is a tool the engine did not grant."""
     text: str | None = None
     usage: dict[str, object] = {}
     turn_completed = False
@@ -502,7 +511,7 @@ def _parse_codex_events(label: str, stdout: str) -> tuple[str, dict[str, object]
         if kind == "item.completed":
             item = event.get("item")
             item_type = item.get("type") if isinstance(item, Mapping) else None
-            if item_type not in CODEX_TALK_ITEMS:
+            if item_type not in CODEX_TALK_ITEMS or (item_type == "web_search" and not browse):
                 raise RuntimeError(
                     f"{label}: the codex client used a tool ({item_type!r}); client "
                     f"engines are plain chat engines, so the call is not accepted"
@@ -621,12 +630,22 @@ def build_client_chat_fn(
     usage_sink: dict[str, dict[str, int | float]] | None,
     label: str,
     run: Runner = subprocess.run,
+    browse: bool = True,
 ) -> Callable[[list[prompts.Message]], str]:
     """A ChatFn that runs the client once per call. `check_available` has
-    already refused anything that cannot run."""
+    already refused anything that cannot run. `browse` is on by default
+    (owner direction 2026-10-15); the last-synthesizer role passes it off,
+    which `claude` and `codex` honor and `antigravity` cannot, since its
+    grounding is an account-level setting, so it is refused in that role."""
     from rotated_debate.engines import record_usage
 
     client, model = split_client_model_id(model_id)
+    if client == "antigravity" and not browse:
+        raise SystemExit(
+            f"{label}: the antigravity client cannot run with browsing off (its Google "
+            f"Search grounding is an account-level setting), so it cannot take a role "
+            f"that must not browse; use another engine for it"
+        )
     executable = _executable(client)
     timeout = _timeout()
     # Removed when the engine is collected; see _instruction_free_directory.
@@ -636,12 +655,14 @@ def build_client_chat_fn(
         system_prompt, prompt = _split_messages(messages)
         env = client_env()
         if client == "claude":
-            command = claude_command(executable, model, system_prompt)
+            command = claude_command(executable, model, system_prompt, browse=browse)
             stdin_text = prompt
         elif client == "codex":
             instructions = Path(workdir.name) / "instructions.md"
             instructions.write_text(system_prompt, encoding="utf-8")
-            command = codex_command(executable, model, workdir.name, str(instructions))
+            command = codex_command(
+                executable, model, workdir.name, str(instructions), browse=browse
+            )
             env[CODEX_HOME_ENV] = str(codex_home(workdir.name))
             stdin_text = prompt
         else:
@@ -673,7 +694,7 @@ def build_client_chat_fn(
         if client == "claude":
             text, usage = _parse_claude_result(label, completed.stdout)
         elif client == "codex":
-            text, usage = _parse_codex_events(label, completed.stdout)
+            text, usage = _parse_codex_events(label, completed.stdout, browse=browse)
         else:
             text, usage = _parse_antigravity_result(
                 label, completed.stdout, completed.stderr or ""

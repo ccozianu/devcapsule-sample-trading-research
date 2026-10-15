@@ -779,6 +779,53 @@ class AntigravityCallTests(FakeClientMixin, unittest.TestCase):
         self.assertTrue(all(c["key_vars"] == [] for c in self.calls()), self.calls())
 
 
+class NoBrowseRoleTests(FakeClientMixin, unittest.TestCase):
+    """The last synthesizer passes browse=False; clients that can honor it do."""
+
+    def test_claude_without_browsing_gets_no_web_tools(self) -> None:
+        chat = build_chat_fn("cli-claude:claude-fable-5-1", None, browse=False, label="j")
+        chat([("system", "s"), ("user", "u")])
+        argv = self.calls()[-1]["argv"]
+        self.assertEqual(argv[argv.index("--tools") + 1], "")
+        self.assertEqual(argv[argv.index("--allowedTools") + 1], "")
+
+    def test_codex_without_browsing_disables_search_and_rejects_a_search_item(self) -> None:
+        chat = build_chat_fn("cli-codex:gpt-6-astra", None, browse=False, label="j")
+        chat([("system", "s"), ("user", "u")])
+        argv = [c for c in self.calls() if c["argv"][:1] == ["exec"]][-1]["argv"]
+        self.assertIn('web_search="disabled"', argv)
+        self.assertNotIn('web_search="live"', argv)
+        events = (CODEX_FIXTURES / "exec-events-browse.jsonl").read_text(encoding="utf-8")
+        with self.assertRaisesRegex(RuntimeError, "used a tool.*web_search"):
+            clients._parse_codex_events("j", events, browse=False)
+
+    def test_antigravity_is_refused_in_a_no_browse_role(self) -> None:
+        with self.assertRaises(SystemExit) as ctx:
+            build_chat_fn("cli-antigravity:gemini-3.8-flash-high", None, browse=False, label="j")
+        self.assertIn("browsing off", str(ctx.exception))
+        self.assertEqual(self.calls()[-1]["argv"], ["models"])
+
+    def test_main_lineup_browses_whatever_the_flag_says(self) -> None:
+        specs = parse_engine_args("cli-claude-fable-5-1,cli-gpt-6-astra,cli-gemini-3.8-flash")
+        engines = build_engines(specs, None, {}, browse=False)
+        engines["cli-claude-fable-5-1"]([("system", "s"), ("user", "u")])
+        argv = self.calls()[-1]["argv"]
+        self.assertEqual(argv[argv.index("--tools") + 1], "WebSearch,WebFetch")
+
+    def test_client_last_synthesizer_runs_without_browsing_end_to_end(self) -> None:
+        os.environ["FAKE_CLAUDE_REPLY"] = ENGINE_REPLY
+        out = Path(self._tmp.name) / "debate.md"
+        code = main([
+            "ask", "q?",
+            "--engines", "cli-claude-fable-5-1,cli-claude-sonnet-5,cli-claude-opus-5",
+            "--add-last-synthesizer", "cli-gpt-6-astra", "--out", str(out),
+        ])
+        self.assertEqual(code, 0)
+        judge = [c for c in self.calls() if c["argv"][:1] == ["exec"]]
+        self.assertEqual(len(judge), 1)
+        self.assertIn('web_search="disabled"', judge[0]["argv"])
+
+
 class UsageSinkTests(unittest.TestCase):
     def test_float_fields_accumulate(self) -> None:
         sink: dict = {}
