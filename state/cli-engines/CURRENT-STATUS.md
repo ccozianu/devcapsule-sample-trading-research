@@ -129,7 +129,12 @@ every tool unprompted, so the engine now runs with a private home (token
 link plus its own settings, `always-proceed` with a deny list; `strict`
 auto-denied the URL read and returned an empty answer, now an error that
 carries stderr). Three real calls through the code path, each demanding
-a search, answered with a live price and a source.
+a search, answered with a live price and a source. Review round 4 on the
+change: merged as `d52cddb`, resolved in `adf6c31`, see the
+[round-4 record](2026-10-15-record-review-round-4.md); the one runtime
+finding, a client last synthesizer keeping its web access, is closed:
+that role now runs `claude` without web tools and `codex` with search
+disabled, and refuses `antigravity`. Gate: 108 tests.
 
 Slice 1 below, awaiting the owner's pull request.
 
@@ -359,6 +364,8 @@ that were rejected so they are not re-proposed.
   the text for the stacked pull request.
 - [Record: review round 3](2026-10-15-record-review-round-3.md), the
   assessment of the slices 2 and 3 review.
+- [Record: review round 4](2026-10-15-record-review-round-4.md), the
+  assessment of the browsing-by-default review.
 - The access-route decision this extends:
   [LangChain as the engine access layer](../../decisions/engineering/2026-08-23-langchain-engine-access.md).
 - The binding contract:
