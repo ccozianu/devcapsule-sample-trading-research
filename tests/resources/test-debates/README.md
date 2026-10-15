@@ -47,3 +47,15 @@ Filenames carry the transcript's own `generated_at` timestamp
   cache creation), 14,926 output tokens, $0.69 at list
   price under the subscription (fable-5-1 $0.35, sonnet-5 $0.11, opus-5 $0.23). Implementor validation; the
   owner's mixed-route acceptance run is still to come.
+- `20261015-074404-cli-three-clients-91-prime-debate.md` — first live run across all
+  three command-line clients (2026-10-15, cli-engines slices 2 and 3):
+  `cli-claude-fable-5-1` through `claude`, `cli-gpt-6-astra` through
+  `codex`, `cli-gemini-3.8-flash` through `antigravity` (effort `high`
+  added by the engine), same trivial question as the slice-1 run, 3
+  rotations, 1 round. `state=converged`, zero parse errors, 2 reasoned
+  concessions / 0 capitulations, 12 client calls. Usage as each client
+  reports it: claude 3.6k input tokens over 4 calls at $0.15 estimated;
+  codex 53.0k input (32.5k cached, its own tool descriptions each call);
+  antigravity 60.2k input (its own agent prompt each call) and 8.4k
+  thinking tokens. The two clients without a price report none. This is
+  the acceptance evidence the slices 2 and 3 work order names.
