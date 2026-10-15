@@ -8,7 +8,7 @@ mode.
 
 State: `active; permanent coordination`
 
-Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@f584a2788421
+Definition read: WORKFLOW.md@c3c0722d6cd5, WORKFLOW-LOCAL.md@41bb0ecb7ff2
 
 Branch prefix: `ws-project-management/`
 
